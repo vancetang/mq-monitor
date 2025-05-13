@@ -58,7 +58,13 @@ public class MQPCFService {
                 status.put("startDate", (String) response.getParameter(CMQCFC.MQCACF_Q_MGR_START_DATE).getValue());
                 status.put("startTime", (String) response.getParameter(CMQCFC.MQCACF_Q_MGR_START_TIME).getValue());
             }
-        } catch (MQException | IOException e) {
+        } catch (MQException e) {
+            log.error("獲取 Queue Manager 狀態時發生錯誤: {}", e.getMessage(), e);
+            // 檢查是否為連線錯誤
+            mqConnectionService.checkConnectionError(e);
+            status.put("status", "錯誤: " + e.getMessage());
+            status.put("connected", false);
+        } catch (IOException e) {
             log.error("獲取 Queue Manager 狀態時發生錯誤: {}", e.getMessage(), e);
             status.put("status", "錯誤: " + e.getMessage());
             status.put("connected", false);
@@ -140,13 +146,19 @@ public class MQPCFService {
                         queueInfo.put("status", "正常");
                     }
                 } catch (MQException e) {
+                    // 檢查是否為連線錯誤
+                    mqConnectionService.checkConnectionError(e);
                     queueInfo.put("status", "錯誤: " + e.getMessage());
                     queueInfo.put("depth", -1);
                 }
 
                 queuesStatus.add(queueInfo);
             }
-        } catch (MQException | IOException e) {
+        } catch (MQException e) {
+            log.error("獲取隊列狀態時發生錯誤: {}", e.getMessage(), e);
+            // 檢查是否為連線錯誤
+            mqConnectionService.checkConnectionError(e);
+        } catch (IOException e) {
             log.error("獲取隊列狀態時發生錯誤: {}", e.getMessage(), e);
         } finally {
             if (agent != null) {
@@ -213,15 +225,19 @@ public class MQPCFService {
                         channelInfo.put("active", false);
                     }
                 } catch (MQException e) {
+                    // 檢查是否為連線錯誤
+                    mqConnectionService.checkConnectionError(e);
                     channelInfo.put("status", "非作用中");
                     channelInfo.put("active", false);
                 }
 
                 channelsStatus.add(channelInfo);
             }
-        } catch (MQException |
-
-                IOException e) {
+        } catch (MQException e) {
+            log.error("獲取通道狀態時發生錯誤: {}", e.getMessage(), e);
+            // 檢查是否為連線錯誤
+            mqConnectionService.checkConnectionError(e);
+        } catch (IOException e) {
             log.error("獲取通道狀態時發生錯誤: {}", e.getMessage(), e);
         } finally {
             if (agent != null) {

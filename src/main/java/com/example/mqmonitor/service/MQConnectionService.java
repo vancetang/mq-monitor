@@ -1,16 +1,17 @@
 package com.example.mqmonitor.service;
 
 import java.util.Hashtable;
+import java.util.Objects;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.mqmonitor.config.MQInfoProperties;
 import com.ibm.mq.MQException;
 import com.ibm.mq.MQQueueManager;
 import com.ibm.mq.constants.MQConstants;
 
-import com.example.mqmonitor.config.MQInfoProperties;
-import io.micrometer.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -25,7 +26,7 @@ public class MQConnectionService {
 
     /**
      * 獲取當前的 MQQueueManager 實例
-     * 
+     *
      * @return MQQueueManager 實例，如果未連接則返回 null
      */
     public synchronized MQQueueManager getMQQueueManager() {
@@ -34,14 +35,13 @@ public class MQConnectionService {
 
     /**
      * 檢查 MQ 連線是否可用
-     * 
+     *
      * @return 如果連線可用返回 true，否則返回 false
      */
     public synchronized boolean isConnected() {
-        if (mqQueueManager == null) {
+        if (Objects.isNull(mqQueueManager)) {
             return false;
         }
-        
         try {
             // 嘗試獲取連線名稱來檢查連線是否仍然有效
             mqQueueManager.getName();
@@ -55,8 +55,32 @@ public class MQConnectionService {
     }
 
     /**
+     * 檢查 MQ 操作是否因連線問題而失敗，如果是則更新連線狀態
+     *
+     * @param e MQ 操作拋出的異常
+     * @return 如果是連線問題返回 true，否則返回 false
+     */
+    public synchronized boolean checkConnectionError(MQException e) {
+        // 檢查是否為連線相關的錯誤碼
+        // 2009 (MQRC_CONNECTION_BROKEN)
+        // 2018 (MQRC_CONNECTION_ERROR)
+        // 2161 (MQRC_Q_MGR_NOT_AVAILABLE)
+        // 2059 (MQRC_Q_MGR_NOT_ACTIVE)
+        // 2162 (MQRC_Q_MGR_STOPPING)
+        if (e.getReason() == 2009 || e.getReason() == 2018 ||
+                e.getReason() == 2161 || e.getReason() == 2059 ||
+                e.getReason() == 2162) {
+            log.error("檢測到 MQ 連線錯誤: {} ({})", e.getMessage(), e.getReason());
+            // 連線已斷開，將 mqQueueManager 設為 null
+            mqQueueManager = null;
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * 連接到 MQ Queue Manager
-     * 
+     *
      * @return 如果連接成功返回 true，否則返回 false
      */
     public synchronized boolean connect() {
@@ -65,18 +89,18 @@ public class MQConnectionService {
             log.info("已有另一個連接請求正在處理中");
             return false;
         }
-        
+
         // 如果已經連接，則返回
         if (isConnected()) {
             log.info("MQ 已經連接");
             return true;
         }
-        
+
         isConnecting = true;
-        
+
         try {
             log.info("嘗試連接到 MQ Queue Manager: {}", mqInfo.getQueueManager());
-            
+
             Hashtable<String, Object> properties = new Hashtable<>();
             properties.put(MQConstants.HOST_NAME_PROPERTY, mqInfo.getConnName().split("\\(")[0]);
             properties.put(MQConstants.PORT_PROPERTY, Integer.parseInt(mqInfo.getConnName().split("\\(|\\)")[1]));
@@ -85,7 +109,7 @@ public class MQConnectionService {
             if (StringUtils.isNotBlank(mqInfo.getPassword())) {
                 properties.put(MQConstants.PASSWORD_PROPERTY, mqInfo.getPassword());
             }
-            
+
             mqQueueManager = new MQQueueManager(mqInfo.getQueueManager(), properties);
             log.info("成功連接到 MQ Queue Manager: {}", mqInfo.getQueueManager());
             return true;
@@ -102,7 +126,7 @@ public class MQConnectionService {
      * 斷開與 MQ Queue Manager 的連接
      */
     public synchronized void disconnect() {
-        if (mqQueueManager != null) {
+        if (Objects.nonNull(mqQueueManager)) {
             try {
                 mqQueueManager.disconnect();
                 log.info("已斷開與 MQ Queue Manager 的連接");
@@ -116,7 +140,7 @@ public class MQConnectionService {
 
     /**
      * 重新連接到 MQ Queue Manager
-     * 
+     *
      * @return 如果重新連接成功返回 true，否則返回 false
      */
     public synchronized boolean reconnect() {

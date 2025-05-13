@@ -17,10 +17,11 @@ public class MQConnectionScheduler {
 
     /**
      * 定期檢查 MQ 連線狀態，如果斷開則嘗試重新連線
-     * 每 30 秒執行一次
+     * 每 15 秒執行一次
      */
-    @Scheduled(fixedRate = 30000)
+    @Scheduled(fixedRate = 15000)
     public void checkMQConnection() {
+        // 主動檢查連線狀態
         if (!mqConnectionService.isConnected()) {
             log.info("檢測到 MQ 連線已斷開，嘗試重新連線");
             boolean reconnected = mqConnectionService.reconnect();
