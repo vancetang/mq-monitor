@@ -40,6 +40,10 @@
         <div class="refresh-controls">
             <button id="refreshBtn" class="btn btn-primary">立即重新整理</button>
 
+            <form action="/reconnect" method="post" class="d-inline ms-2">
+                <button type="submit" class="btn btn-warning">重新連接 MQ</button>
+            </form>
+
             <div class="form-check form-switch ms-3">
                 <input class="form-check-input" type="checkbox" id="autoRefreshToggle" checked>
                 <label class="form-check-label" for="autoRefreshToggle">自動重新整理</label>
@@ -55,13 +59,27 @@
             <div id="countdown" class="countdown">剩餘時間: 30 秒</div>
         </div>
 
+        <#if successMessage??>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                ${successMessage}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </#if>
+
+        <#if errorMessage??>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                ${errorMessage}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </#if>
+
         <!-- Queue Manager 狀態 -->
         <div class="card">
             <div class="card-header">
                 <h2>Queue Manager 狀態</h2>
             </div>
             <div class="card-body">
-                <#if queueManager.connected?? && queueManager.connected>
+                <#if queueManager?? && queueManager.connected?? && queueManager.connected>
                     <div class="alert alert-success">
                         <h4><span class="status-ok">✓</span> Queue Manager: ${queueManager.name!} 正常運行中</h4>
                         <p>啟動日期: ${queueManager.startDate!}</p>
@@ -70,7 +88,7 @@
                 <#else>
                     <div class="alert alert-danger">
                         <h4><span class="status-error">✗</span> Queue Manager 未連接</h4>
-                        <p>狀態: ${queueManager.status!}</p>
+                        <p>狀態: ${(queueManager.status)!"連線中斷"}</p>
                     </div>
                 </#if>
             </div>
@@ -100,7 +118,7 @@
                                         <td>${queue.name!}</td>
                                         <td>本地</td>
                                         <td>
-                                            <#if queue.depth?? && queue.maxDepth?? && queue.maxDepth gt 0>
+                                            <#if queue?? && queue.depth?? && queue.maxDepth?? && queue.maxDepth gt 0>
                                                 <#assign usagePercent = (queue.depth / queue.maxDepth) * 100>
                                                 ${usagePercent?string["0"]}%
                                             <#else>
@@ -108,14 +126,14 @@
                                             </#if>
                                         </td>
                                         <td>
-                                            <#if queue.maxDepth??>
+                                            <#if queue?? && queue.maxDepth??>
                                                 ${queue.depth!}/${queue.maxDepth!}
                                             <#else>
                                                 0/5000
                                             </#if>
                                         </td>
                                         <td>
-                                            輸入 ${queue.openInputCount!0} ; 輸出 ${queue.openOutputCount!0}
+                                            輸入 ${(queue.openInputCount)!0} ; 輸出 ${(queue.openOutputCount)!0}
                                         </td>
                                     </tr>
                                 </#list>
@@ -153,10 +171,10 @@
                                     <tr>
                                         <td>${channel.name!}</td>
                                         <td>
-                                            <#if channel.active?? && channel.active>
+                                            <#if channel?? && channel.active?? && channel.active>
                                                 <span class="status-ok">✓ ${channel.status!}</span>
                                             <#else>
-                                                <span class="status-warning">${channel.status!}</span>
+                                                <span class="status-warning">${(channel.status)!"未知"}</span>
                                             </#if>
                                         </td>
                                     </tr>

@@ -5,7 +5,7 @@
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.5-brightgreen)
 ![IBM MQ](https://img.shields.io/badge/IBM%20MQ-9.3.4.0-blue)
 
-MQ Monitor 是一個用於監控 IBM MQ 佇列管理器、佇列和通道狀態的 Web 應用程式。它提供了直觀的儀表板和 RESTful API，讓使用者能夠即時監控 MQ 資源的運行狀況。
+MQ Monitor 是一個用於監控 IBM MQ 佇列管理器、佇列和通道狀態的 Web 應用程式。它提供了直觀的儀表板和 RESTful API，讓使用者能夠即時監控 MQ 資源的運行狀況。系統具備自動和手動重新連線功能，確保在 MQ 連線斷開時能夠快速恢復連線。
 
 ## 功能特點
 
@@ -13,6 +13,8 @@ MQ Monitor 是一個用於監控 IBM MQ 佇列管理器、佇列和通道狀態�
 - **佇列監控**：顯示所有佇列的深度、使用率、連接數等資訊
 - **通道監控**：顯示所有通道的狀態和活動情況
 - **自動重新整理**：支援可配置的自動重新整理間隔
+- **自動重新連線**：當 MQ 連線斷開時，系統會自動嘗試重新連線
+- **手動重新連線**：提供 Web 界面和 API 端點，允許手動觸發重新連線
 - **RESTful API**：提供完整的 API 介面，方便與其他系統整合
 - **響應式設計**：適應不同螢幕尺寸的裝置
 
@@ -23,6 +25,7 @@ MQ Monitor 是一個用於監控 IBM MQ 佇列管理器、佇列和通道狀態�
   - Spring Boot 3.4.5
   - IBM MQ Java Client 9.3.4.0
   - PCF (Programmable Command Format) API
+  - Spring Scheduling (用於自動重新連線)
   - Lombok
   - Apache Commons Lang3
 
@@ -87,6 +90,7 @@ java -jar target/mq-monitor-0.0.1-SNAPSHOT.jar
 1. 開啟瀏覽器，訪問 http://localhost:8080
 2. 儀表板將顯示佇列管理器、佇列和通道的狀態
 3. 可以設定自動重新整理間隔或手動重新整理
+4. 點擊「重新連接 MQ」按鈕可手動觸發重新連線
 
 ### REST API
 
@@ -96,11 +100,16 @@ MQ Monitor 提供以下 REST API 端點：
 - **GET /api/mq/queues** - 獲取所有佇列狀態
 - **GET /api/mq/channels** - 獲取所有通道狀態
 - **GET /api/mq/status** - 獲取所有 MQ 資源的狀態
+- **POST /api/mq/reconnect** - 手動觸發重新連接到 MQ
 
 範例請求：
 
 ```bash
+# 獲取所有 MQ 資源狀態
 curl http://localhost:8080/api/mq/status
+
+# 手動觸發重新連接到 MQ
+curl -X POST http://localhost:8080/api/mq/reconnect
 ```
 
 ## API 文檔
@@ -162,6 +171,28 @@ GET /api/mq/channels
   },
   ...
 ]
+```
+
+### 重新連接 API
+
+**請求**：
+```
+POST /api/mq/reconnect
+```
+
+**回應**：
+```json
+{
+  "success": true,
+  "message": "已成功重新連接到 MQ"
+}
+```
+或
+```json
+{
+  "success": false,
+  "message": "重新連接到 MQ 失敗"
+}
 ```
 
 ## 開發與貢獻

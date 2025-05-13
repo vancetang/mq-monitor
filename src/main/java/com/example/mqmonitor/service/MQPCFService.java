@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MQPCFService {
 
     @Autowired
-    MQQueueManager mqQueueManager;
+    private MQConnectionService mqConnectionService;
 
     /**
      * 獲取 Queue Manager 狀態
@@ -33,6 +33,9 @@ public class MQPCFService {
     public Map<String, Object> getQueueManagerStatus() {
         Map<String, Object> status = new HashMap<>();
         PCFMessageAgent agent = null;
+
+        // 獲取 MQQueueManager 實例
+        MQQueueManager mqQueueManager = mqConnectionService.getMQQueueManager();
 
         try {
             if (mqQueueManager == null) {
@@ -78,6 +81,9 @@ public class MQPCFService {
     public List<Map<String, Object>> getQueuesStatus() {
         List<Map<String, Object>> queuesStatus = new ArrayList<>();
         PCFMessageAgent agent = null;
+
+        // 獲取 MQQueueManager 實例
+        MQQueueManager mqQueueManager = mqConnectionService.getMQQueueManager();
 
         try {
             if (mqQueueManager == null) {
@@ -161,6 +167,9 @@ public class MQPCFService {
     public List<Map<String, Object>> getChannelsStatus() {
         List<Map<String, Object>> channelsStatus = new ArrayList<>();
         PCFMessageAgent agent = null;
+
+        // 獲取 MQQueueManager 實例
+        MQQueueManager mqQueueManager = mqConnectionService.getMQQueueManager();
 
         try {
             if (mqQueueManager == null) {
