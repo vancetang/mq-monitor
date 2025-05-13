@@ -2,7 +2,7 @@ package com.example.mqmonitor.config;
 
 import java.util.Hashtable;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -16,33 +16,21 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 public class MQConfig {
 
-    @Value("${mq-info.queueManager}")
-    private String queueManager;
-
-    @Value("${mq-info.channel}")
-    private String channel;
-
-    @Value("${mq-info.connName}")
-    private String connName;
-
-    @Value("${mq-info.user}")
-    private String user;
-
-    @Value("${mq-info.password:}")
-    private String password;
+    @Autowired
+    private MQInfoProperties mqInfo;
 
     @Bean
     public MQQueueManager mqQueueManager() {
         try {
             Hashtable<String, Object> properties = new Hashtable<>();
-            properties.put(MQConstants.HOST_NAME_PROPERTY, connName.split("\\(")[0]);
-            properties.put(MQConstants.PORT_PROPERTY, Integer.parseInt(connName.split("\\(|\\)")[1]));
-            properties.put(MQConstants.CHANNEL_PROPERTY, channel);
-            properties.put(MQConstants.USER_ID_PROPERTY, user);
-            if (StringUtils.isNotBlank(password)) {
-                properties.put(MQConstants.PASSWORD_PROPERTY, password);
+            properties.put(MQConstants.HOST_NAME_PROPERTY, mqInfo.getConnName().split("\\(")[0]);
+            properties.put(MQConstants.PORT_PROPERTY, Integer.parseInt(mqInfo.getConnName().split("\\(|\\)")[1]));
+            properties.put(MQConstants.CHANNEL_PROPERTY, mqInfo.getChannel());
+            properties.put(MQConstants.USER_ID_PROPERTY, mqInfo.getUser());
+            if (StringUtils.isNotBlank(mqInfo.getPassword())) {
+                properties.put(MQConstants.PASSWORD_PROPERTY, mqInfo.getPassword());
             }
-            return new MQQueueManager(queueManager, properties);
+            return new MQQueueManager(mqInfo.getQueueManager(), properties);
         } catch (Exception e) {
             log.error("無法連接到 MQ Queue Manager: {}", e.getMessage(), e);
             return null;
