@@ -257,25 +257,16 @@ public class MQPCFService {
      * 將通道狀態代碼轉換為文字描述
      */
     private String getChannelStatusText(int status) {
-        switch (status) {
-            case CMQCFC.MQCHS_BINDING:
-                return "正在綁定";
-            case CMQCFC.MQCHS_STARTING:
-                return "正在啟動";
-            case CMQCFC.MQCHS_RUNNING:
-                return "運行中";
-            case CMQCFC.MQCHS_STOPPING:
-                return "正在停止";
-            case CMQCFC.MQCHS_RETRYING:
-                return "重試中";
-            case CMQCFC.MQCHS_STOPPED:
-                return "已停止";
-            case CMQCFC.MQCHS_PAUSED:
-                return "已暫停";
-            case CMQCFC.MQCHS_INITIALIZING:
-                return "初始化中";
-            default:
-                return "未知狀態(" + status + ")";
-        }
+        return switch (status) {
+            case CMQCFC.MQCHS_BINDING -> "正在綁定";
+            case CMQCFC.MQCHS_STARTING -> "正在啟動";
+            case CMQCFC.MQCHS_RUNNING -> "運行中";
+            case CMQCFC.MQCHS_STOPPING -> "正在停止";
+            case CMQCFC.MQCHS_RETRYING -> "重試中";
+            case CMQCFC.MQCHS_STOPPED -> "已停止";
+            case CMQCFC.MQCHS_PAUSED -> "已暫停";
+            case CMQCFC.MQCHS_INITIALIZING -> "初始化中";
+            default -> "未知狀態(" + status + ")";
+        };
     }
 }
