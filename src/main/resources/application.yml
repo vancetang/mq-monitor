@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: mq-monitor
+  freemarker:
+    template-loader-path: classpath:/templates/
+    suffix: .ftl
+    cache: false
+    charset: UTF-8
+    check-template-location: true
+    content-type: text/html
+    expose-request-attributes: true
+    expose-session-attributes: true
+    request-context-attribute: request
+
+# IBM MQ 配置
+mq-info:
+  queueManager: MQJ006D
+  channel: DEV.ADMIN.SVRCONN
+  connName: localhost(3434)
+  user: mqm
+
+# 伺服器配置
+server:
+  port: 8080

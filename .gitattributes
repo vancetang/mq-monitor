@@ -1,0 +1,26 @@
+# 預設所有檔案不處理行結尾（視為二進位），避免誤處理
+* -text
+
+# Java 程式碼檔案，使用 LF 行結尾（Unix 風格，跨平台一致性）
+*.java text eol=lf
+
+# 資源檔案和配置檔案，使用 LF 行結尾
+*.properties text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.xml text eol=lf
+
+# Shell 腳本，使用 LF 行結尾（Unix 環境執行）
+*.sh text eol=lf
+
+# Windows 批次檔案，使用 CRLF 行結尾（Windows 環境執行）
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 文件檔案，使用 LF 行結尾（跨平台一致性）
+*.md text eol=lf diff=markdown
+*.txt text eol=lf
+
+# Git 相關檔案，使用 LF 行結尾
+.gitattributes text eol=lf
+.gitignore text eol=lf

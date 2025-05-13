@@ -1,0 +1,30 @@
+{
+  "properties": [
+    {
+      "name": "mq-info.queue-manager",
+      "type": "java.lang.String",
+      "description": "IBM MQ Queue Manager 名稱。"
+    },
+    {
+      "name": "mq-info.channel",
+      "type": "java.lang.String",
+      "description": "IBM MQ 連接通道。"
+    },
+    {
+      "name": "mq-info.conn-name",
+      "type": "java.lang.String",
+      "description": "IBM MQ 連接地址，格式為 host(port)。"
+    },
+    {
+      "name": "mq-info.user",
+      "type": "java.lang.String",
+      "description": "IBM MQ 連接用戶名。"
+    },
+    {
+      "name": "mq-info.password",
+      "type": "java.lang.String",
+      "description": "IBM MQ 連接密碼。",
+      "defaultValue": ""
+    }
+  ]
+}

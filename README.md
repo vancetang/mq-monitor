@@ -1,0 +1,192 @@
+# MQ Monitor
+
+![版本](https://img.shields.io/badge/版本-0.0.1--SNAPSHOT-blue)
+![Java](https://img.shields.io/badge/Java-21-orange)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.5-brightgreen)
+![IBM MQ](https://img.shields.io/badge/IBM%20MQ-9.3.4.0-blue)
+
+MQ Monitor 是一個用於監控 IBM MQ 佇列管理器、佇列和通道狀態的 Web 應用程式。它提供了直觀的儀表板和 RESTful API，讓使用者能夠即時監控 MQ 資源的運行狀況。
+
+## 功能特點
+
+- **佇列管理器監控**：顯示佇列管理器的連接狀態、啟動時間等資訊
+- **佇列監控**：顯示所有佇列的深度、使用率、連接數等資訊
+- **通道監控**：顯示所有通道的狀態和活動情況
+- **自動重新整理**：支援可配置的自動重新整理間隔
+- **RESTful API**：提供完整的 API 介面，方便與其他系統整合
+- **響應式設計**：適應不同螢幕尺寸的裝置
+
+## 技術架構
+
+- **後端**：
+  - Java 21
+  - Spring Boot 3.4.5
+  - IBM MQ Java Client 9.3.4.0
+  - PCF (Programmable Command Format) API
+  - Lombok
+  - Apache Commons Lang3
+
+- **前端**：
+  - FreeMarker 模板引擎
+  - Bootstrap 5
+  - JavaScript
+
+## 系統需求
+
+- Java 21 或更高版本
+- Maven 3.6 或更高版本
+- IBM MQ 伺服器 (本地或遠端)
+
+## 安裝與設定
+
+### 1. 取得專案
+
+```bash
+git clone https://github.com/yourusername/mq-monitor.git
+cd mq-monitor
+```
+
+### 2. 配置 IBM MQ 連接
+
+編輯 `src/main/resources/application.yml` 檔案，設定您的 IBM MQ 連接資訊：
+
+```yaml
+# IBM MQ 配置
+mq-info:
+  queueManager: YOUR_QUEUE_MANAGER_NAME
+  channel: YOUR_CHANNEL_NAME
+  connName: YOUR_HOST(YOUR_PORT)
+  user: YOUR_USERNAME
+  password: YOUR_PASSWORD  # 可選，如果需要密碼認證
+```
+
+### 3. 編譯與打包
+
+```bash
+./mvnw clean package
+```
+
+### 4. 執行應用程式
+
+```bash
+java -jar target/mq-monitor-0.0.1-SNAPSHOT.jar
+```
+
+或使用 Maven 直接執行：
+
+```bash
+./mvnw spring-boot:run
+```
+
+應用程式將在 http://localhost:8080 啟動。
+
+## 使用方法
+
+### Web 介面
+
+1. 開啟瀏覽器，訪問 http://localhost:8080
+2. 儀表板將顯示佇列管理器、佇列和通道的狀態
+3. 可以設定自動重新整理間隔或手動重新整理
+
+### REST API
+
+MQ Monitor 提供以下 REST API 端點：
+
+- **GET /api/mq/queuemanager** - 獲取佇列管理器狀態
+- **GET /api/mq/queues** - 獲取所有佇列狀態
+- **GET /api/mq/channels** - 獲取所有通道狀態
+- **GET /api/mq/status** - 獲取所有 MQ 資源的狀態
+
+範例請求：
+
+```bash
+curl http://localhost:8080/api/mq/status
+```
+
+## API 文檔
+
+### 佇列管理器狀態 API
+
+**請求**：
+```
+GET /api/mq/queuemanager
+```
+
+**回應**：
+```json
+{
+  "name": "MQJ006D",
+  "status": "正常運行",
+  "connected": true,
+  "startDate": "2023-05-15",
+  "startTime": "08:30:45"
+}
+```
+
+### 佇列狀態 API
+
+**請求**：
+```
+GET /api/mq/queues
+```
+
+**回應**：
+```json
+[
+  {
+    "name": "DEV.QUEUE.1",
+    "depth": 10,
+    "maxDepth": 5000,
+    "openInputCount": 1,
+    "openOutputCount": 2,
+    "status": "正常"
+  },
+  ...
+]
+```
+
+### 通道狀態 API
+
+**請求**：
+```
+GET /api/mq/channels
+```
+
+**回應**：
+```json
+[
+  {
+    "name": "DEV.APP.SVRCONN",
+    "status": "運行中",
+    "active": true
+  },
+  ...
+]
+```
+
+## 開發與貢獻
+
+### 開發環境設定
+
+1. 確保您已安裝 Java 21 和 Maven
+2. 克隆專案並導入到您的 IDE (Eclipse, IntelliJ IDEA 等)
+3. 執行 `MqMonitorApplication.java` 啟動應用程式
+
+### 建議與貢獻
+
+1. Fork 專案
+2. 創建您的功能分支 (`git checkout -b feature/amazing-feature`)
+3. 提交您的更改 (`git commit -m 'Add some amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 開啟一個 Pull Request
+
+## 授權資訊
+
+本專案採用 [MIT 授權](LICENSE)。
+
+## 聯絡方式
+
+如有任何問題或建議，請聯絡：
+
+- 電子郵件：your.email@example.com
+- GitHub Issues：[提交問題](https://github.com/yourusername/mq-monitor/issues)
