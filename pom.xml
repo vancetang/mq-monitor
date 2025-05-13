@@ -16,10 +16,12 @@
 	<description>IBM MQ Monitor</description>
 	<properties>
 		<java.version>21</java.version>
+		<springdoc.openapi.version>2.8.4</springdoc.openapi.version>
 		<commons.lang3.version>3.17.0</commons.lang3.version>
 		<ibm.mq.version>9.3.4.0</ibm.mq.version>
 	</properties>
 	<dependencies>
+		<!-- ================ Spring 主要 ================ -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -48,6 +50,20 @@
 			<optional>true</optional>
 		</dependency>
 
+		<!-- ================ Spring 必要 ================ -->
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjweaver</artifactId>
+		</dependency>
+
+		<!-- ================ Spring 選用 ================ -->
+		<!-- swagger-ui -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>${springdoc.openapi.version}</version>
+		</dependency>
+
 		<!-- ========== Apache Library ========== -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -57,15 +73,17 @@
 
 		<!-- ========== 常用Third-Party Library ========== -->
 		<dependency>
+			<groupId>com.ibm.mq</groupId>
+			<artifactId>com.ibm.mq.allclient</artifactId>
+			<version>${ibm.mq.version}</version>
+		</dependency>
+
+		<!-- ========== 其他 ========== -->
+		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<!-- Lombok 不需打包到 JAR 或 WAR 檔案中(只有編譯時期會需要到) -->
 			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.ibm.mq</groupId>
-			<artifactId>com.ibm.mq.allclient</artifactId>
-			<version>${ibm.mq.version}</version>
 		</dependency>
 
 	</dependencies>
