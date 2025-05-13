@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +39,7 @@ public class MQPCFService {
         MQQueueManager mqQueueManager = mqConnectionService.getMQQueueManager();
 
         try {
-            if (mqQueueManager == null) {
+            if (Objects.isNull(mqQueueManager)) {
                 status.put("status", "未連接");
                 status.put("connected", false);
                 return status;
@@ -69,7 +70,7 @@ public class MQPCFService {
             status.put("status", "錯誤: " + e.getMessage());
             status.put("connected", false);
         } finally {
-            if (agent != null) {
+            if (Objects.nonNull(agent)) {
                 try {
                     agent.disconnect();
                 } catch (MQException e) {
@@ -92,7 +93,7 @@ public class MQPCFService {
         MQQueueManager mqQueueManager = mqConnectionService.getMQQueueManager();
 
         try {
-            if (mqQueueManager == null) {
+            if (Objects.isNull(mqQueueManager)) {
                 return queuesStatus;
             }
 
@@ -161,7 +162,7 @@ public class MQPCFService {
         } catch (IOException e) {
             log.error("獲取隊列狀態時發生錯誤: {}", e.getMessage(), e);
         } finally {
-            if (agent != null) {
+            if (Objects.nonNull(agent)) {
                 try {
                     agent.disconnect();
                 } catch (MQException e) {
@@ -184,7 +185,7 @@ public class MQPCFService {
         MQQueueManager mqQueueManager = mqConnectionService.getMQQueueManager();
 
         try {
-            if (mqQueueManager == null) {
+            if (Objects.isNull(mqQueueManager)) {
                 return channelsStatus;
             }
 
@@ -240,7 +241,7 @@ public class MQPCFService {
         } catch (IOException e) {
             log.error("獲取通道狀態時發生錯誤: {}", e.getMessage(), e);
         } finally {
-            if (agent != null) {
+            if (Objects.nonNull(agent)) {
                 try {
                     agent.disconnect();
                 } catch (MQException e) {
