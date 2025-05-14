@@ -37,15 +37,15 @@ public class ReportController {
     @GetMapping("/generate")
     public ResponseEntity<byte[]> generateReport() {
         log.info("請求生成 PDF 報表");
-        
+
         try {
             byte[] pdfContent = pdfReportService.generateMQStatusReport();
-            
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
             headers.setContentDispositionFormData("inline", "mq-status-report.pdf");
             headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-            
+
             return new ResponseEntity<>(pdfContent, headers, HttpStatus.OK);
         } catch (Exception e) {
             log.error("生成 PDF 報表時發生錯誤: {}", e.getMessage(), e);
