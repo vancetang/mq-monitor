@@ -1,0 +1,33 @@
+name: ❓ 問題詢問
+description: 提交一個問題詢問
+title: "[QUESTION] 標題"
+labels:
+  - question
+body:
+  - type: input
+    attributes:
+      label: 📝 問題標題(必填)
+      description: 請簡單描述您的問題標題。
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 🔍 問題描述(必填)
+      description: 請詳細描述您的問題。
+      render: markdown
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: 🔗 相關連結
+      description: 提供任何相關的連結（如設計文檔、討論串等）。
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: 📎 其他補充
+      description: |
+        任何連結、截圖或影片等補充訊息，都可以寫在這裡。
+        提示：可以點擊此區域以突出顯示，然後拖入圖片或相關文件。
+    validations:
+      required: false

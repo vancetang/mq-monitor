@@ -1,0 +1,33 @@
+name: ❓ Question
+description: Submit a question
+title: "[QUESTION] Title"
+labels:
+  - question
+body:
+  - type: input
+    attributes:
+      label: 📝 Question Title (Required)
+      description: Please briefly describe the title of your question.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 🔍 Question Description (Required)
+      description: Please provide a detailed description of your question.
+      render: markdown
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: 🔗 Related Links
+      description: Provide any related links (e.g., design documents, discussion threads, etc.).
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: 📎 Additional Information
+      description: |
+        Any supplementary information such as links, screenshots, or videos can be included here.
+        Tip: Click this area to highlight it, then drag and drop images or related files.
+    validations:
+      required: false

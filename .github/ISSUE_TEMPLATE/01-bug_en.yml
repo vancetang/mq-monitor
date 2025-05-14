@@ -1,0 +1,67 @@
+name: 🐛 Bug Report
+description: Submit a bug or issue
+title: "[BUG] Title"
+labels:
+  - bug
+body:
+  - type: checkboxes
+    attributes:
+      label: 🔍 Are There Existing Related Issues? (Required)
+      description: Please search to see if a similar issue already exists.
+      options:
+        - label: I have searched existing issues
+          required: true
+  - type: input
+    attributes:
+      label: 🕒 Occurrence Time (Required)
+      description: Format YYYY-MM-DD HH:MM
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 📝 Current Behavior (Required)
+      description: Briefly describe what happened.
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 🎯 Expected Behavior
+      description: Briefly describe what you originally expected to happen.
+      render: markdown
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: 🔢 Website Version
+      description: Located at the bottom of the website
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: 🖥️ Platform Environment
+      description: |
+        Example:
+          - **Operating System**: Ubuntu 20.04
+          - **Browser**: Chrome
+          - **Browser Version**: 13.14.0
+      value: |
+        - Operating System:
+        - Browser:
+        - Browser Version:
+      render: markdown
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: ❗ Website Error Code
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: 📎 Additional Information
+      description: |
+        Any supplementary information such as links, screenshots, or videos can be included here.
+        Tip: Click this area to highlight it, then drag and drop images or related files.
+    validations:
+      required: false

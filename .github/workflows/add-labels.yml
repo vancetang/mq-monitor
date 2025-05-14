@@ -1,0 +1,84 @@
+name: 新增或更新 Labels
+
+on:
+  workflow_dispatch: # 允許手動觸發
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  add-labels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 使用 GitHub API 新增或更新 Labels
+        run: |
+          LABELS=$(cat << 'EOF'
+            [
+              {"name": "bug", "color": "d73a4a", "description": "Something isn't working"},
+              {"name": "documentation", "color": "0075ca", "description": "Improvements or additions to documentation"},
+              {"name": "duplicate", "color": "cfd3d7", "description": "This issue or pull request already exists"},
+              {"name": "enhancement", "color": "a2eeef", "description": "Feature or improvement to enhance functionality"},
+              {"name": "feature", "color": "dac387", "description": "New Feature Request"},
+              {"name": "good first issue", "color": "7057ff", "description": "Good for newcomers"},
+              {"name": "help wanted", "color": "008672", "description": "Extra attention is needed"},
+              {"name": "invalid", "color": "e4e669", "description": "This doesn't seem right"},
+              {"name": "question", "color": "d876e3", "description": "Further information is requested"},
+              {"name": "testing", "color": "f9d0c4", "description": "Marks features for testing"},
+              {"name": "wip", "color": "f4a261", "description": "Work in Progress"},
+              {"name": "wontfix", "color": "ffffff", "description": "This will not be worked on"},
+              {"name": "stale", "color": "808080", "description": "This issue or PR has been inactive for too long and may need attention or closure"},
+              {"name": "frontend", "color": "1abc9c", "description": "Related to frontend development or user interface"},
+              {"name": "backend", "color": "2ecc71", "description": "Related to backend logic or infrastructure"},
+              {"name": "configuration", "color": "3498db", "description": "Related to project settings or configuration files"},
+              {"name": "build", "color": "e67e22", "description": "Related to build processes or tools"},
+              {"name": "test-code", "color": "9b59b6", "description": "Related to writing or fixing unit/integration test code"}              
+            ]
+          EOF
+          )
+
+          echo "======= Adding or updating labels to ${{ github.repository }} ======="
+
+          for LABEL in $(echo "$LABELS" | jq -r '.[] | @base64'); do
+            _jq() {
+              if [ -z "${1}" ]; then
+                # 如果 ${1} 為空，直接回傳解碼後的完整 JSON
+                echo ${LABEL} | base64 --decode
+              else
+                # 如果 ${1} 有值，使用 jq 提取指定欄位
+                echo ${LABEL} | base64 --decode | jq -r "${1}"
+              fi
+            }
+            
+            LABEL_NAME=$(_jq '.name')
+            LABEL_COLOR=$(_jq '.color')
+            LABEL_DESCRIPTION=$(_jq '.description')
+            # 將標籤名稱編碼為 URL 安全的格式
+            LABEL_NAME=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$LABEL_NAME'))")
+            
+            echo "🔍 Checking label - [${LABEL_NAME}][${LABEL_COLOR}][${LABEL_DESCRIPTION}]"
+            # 檢查標籤是否存在
+            response=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              https://api.github.com/repos/${{ github.repository }}/labels/$LABEL_NAME)
+
+            if [ "$response" -eq 200 ]; then
+              echo "🔄 Label '$LABEL_NAME' exists, updating..."
+              # 更新標籤
+              curl -X PATCH \
+                -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                -d '{"color": "'"$LABEL_COLOR"'", "description": "'"$LABEL_DESCRIPTION"'"}' \
+                https://api.github.com/repos/${{ github.repository }}/labels/$LABEL_NAME
+            elif [ "$response" -eq 404 ]; then
+              echo "🛠️ Label '$LABEL_NAME' does not exist, creating..."
+              # 創建標籤
+              curl -X POST \
+                -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                -d "$(_jq)" \
+                https://api.github.com/repos/${{ github.repository }}/labels
+            else
+              echo "🛑 Error: Unexpected response $response for label '$LABEL_NAME'"
+            fi
+          done

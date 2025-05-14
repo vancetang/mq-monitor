@@ -1,0 +1,26 @@
+name: 📚 Documentation Update Request
+description: Submit a documentation update request
+title: "[DOCUMENTATION] Title"
+labels:
+  - documentation
+body:
+  - type: textarea
+    attributes:
+      label: 📝 Document to Update (Required)
+      description: Please briefly describe the name of the document you would like to update.
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 🔍 Suggested Changes (Required)
+      description: Provide a detailed description of the suggested changes or additional information.
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 📷 Screenshots (If Applicable)
+      description: If it’s a visual documentation issue, please attach relevant screenshots.
+    validations:
+      required: false

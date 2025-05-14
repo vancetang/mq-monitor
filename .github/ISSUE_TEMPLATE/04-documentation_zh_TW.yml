@@ -1,0 +1,26 @@
+name: 📚 文檔更新請求
+description: 提交一個文檔更新請求
+title: "[DOCUMENTATION] 標題"
+labels:
+  - documentation
+body:
+  - type: textarea
+    attributes:
+      label: 📝 要更新的文檔(必填)
+      description: 請簡單描述您希望更新的文檔名稱。
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 🔍 建議修改(必填)
+      description: 具體描述建議修改的內容或補充的資訊。
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 📷 畫面截圖（如適用）
+      description: 如果是視覺上的文檔問題，請附上相關的截圖。
+    validations:
+      required: false

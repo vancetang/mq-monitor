@@ -1,0 +1,47 @@
+name: 🔧 Enhancement Request
+description: Submit an enhancement request
+title: "[ENHANCEMENT] Title"
+labels:
+  - enhancement
+body:
+  - type: input
+    attributes:
+      label: 📝 Feature Name (Required)
+      description: Please briefly describe the name of the feature you would like to enhance.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: ✨ Feature Description (Required)
+      description: Please provide a detailed description of the feature you would like to enhance.
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 🌟 Use Case
+      description: Please describe the use case or scenario for this feature.
+      render: markdown
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: 🎯 Expected Behavior
+      description: Briefly describe what you originally expected to happen.
+      render: markdown
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: 🔗 Related Links
+      description: Provide any related links (e.g., design documents, discussion threads, etc.).
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: 📎 Additional Information
+      description: |
+        Any supplementary information such as links, screenshots, or videos can be included here.
+        Tip: Click this area to highlight it, then drag and drop images or related files.
+    validations:
+      required: false

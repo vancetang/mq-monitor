@@ -1,0 +1,47 @@
+name: 🚀 功能請求
+description: 提交一個新功能請求
+title: "[FEATURE] 標題"
+labels:
+  - feature
+body:
+  - type: input
+    attributes:
+      label: 📝 功能名稱(必填)
+      description: 請簡單描述您希望新增的功能名稱。
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: ✨ 功能描述(必填)
+      description: 請詳細描述您希望新增的功能。
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 🌟 使用場景
+      description: 請描述此功能的使用場景或案例。
+      render: markdown
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: 🎯 預期行為
+      description: 簡單描述原本預期會發生什麼事情
+      render: markdown
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: 🔗 相關連結
+      description: 提供任何相關的連結（如設計文檔、討論串等）。
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: 📎 其他補充
+      description: |
+        任何連結、截圖或影片等補充訊息，都可以寫在這裡。
+        提示：可以點擊此區域以突出顯示，然後拖入圖片或相關文件。
+    validations:
+      required: false

@@ -1,0 +1,54 @@
+# 前端相關標籤
+frontend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/main/resources/static/**/*
+          - src/main/resources/ftl/**/*
+          - src/main/resources/templates/**/*
+
+# 後端相關標籤
+backend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/main/java/**/*
+          - src/main/resources/application*.{yml,properties}
+          - src/main/resources/*.xml
+
+# 配置相關標籤
+configuration:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/main/java/**/config/**/*
+          - src/main/resources/application*.{yml,properties}
+          - src/main/resources/*.xml
+
+# 測試相關標籤
+test-code:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/test/**/*
+
+# 文檔相關標籤
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - docs/**/*
+          - "**/*.md"
+          - .github/ISSUE_TEMPLATE/**
+          - .github/PULL_REQUEST_TEMPLATE.md
+
+# 構建相關標籤
+build:
+  - changed-files:
+      - any-glob-to-any-file:
+          - pom.xml
+          - .github/workflows/**
+          - .github/*.yml
+
+# Add 'feature' label to any PR where the head branch name starts with `feature` or has a `feature` section in the name
+feature:
+  - head-branch: ["^feature", "feature", "^feat", "feat"]
+
+# Add 'bug' label to any PR where the head branch name starts with `fix` or has a `fix` section in the name
+bug:
+  - head-branch: ["^fix", "fix"]
