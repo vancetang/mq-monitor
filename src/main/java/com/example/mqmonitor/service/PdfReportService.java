@@ -205,7 +205,8 @@ public class PdfReportService {
 
             // 計算使用百分比
             int depth = (int) queue.getOrDefault("depth", 0);
-            int maxDepth = (int) queue.getOrDefault("maxDepth", 5000);
+            int maxDepth = (int) queue.getOrDefault("maxDepth", defaultMaxDepth);
+
             int usagePercent = maxDepth > 0 ? (depth * 100 / maxDepth) : 0;
             table.addCell(createCell(usagePercent + "%"));
 
