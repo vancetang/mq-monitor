@@ -38,6 +38,8 @@ public class PdfReportService {
     private PdfFont kaiFont;
     private PdfFont mingFont;
 
+    private static final int DEFAULT_MAX_DEPTH = 5000;
+
     /**
      * 生成 MQ 狀態報表 PDF
      *
@@ -205,7 +207,7 @@ public class PdfReportService {
 
             // 計算使用百分比
             int depth = (int) queue.getOrDefault("depth", 0);
-            int maxDepth = (int) queue.getOrDefault("maxDepth", defaultMaxDepth);
+            int maxDepth = (int) queue.getOrDefault("maxDepth", DEFAULT_MAX_DEPTH);
 
             int usagePercent = maxDepth > 0 ? (depth * 100 / maxDepth) : 0;
             table.addCell(createCell(usagePercent + "%"));
