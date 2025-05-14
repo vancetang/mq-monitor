@@ -19,6 +19,7 @@
 		<springdoc.openapi.version>2.8.4</springdoc.openapi.version>
 		<commons.lang3.version>3.17.0</commons.lang3.version>
 		<ibm.mq.version>9.3.4.0</ibm.mq.version>
+		<itext.version>7.2.5</itext.version>
 	</properties>
 	<dependencies>
 		<!-- ================ Spring 主要 ================ -->
@@ -76,6 +77,28 @@
 			<groupId>com.ibm.mq</groupId>
 			<artifactId>com.ibm.mq.allclient</artifactId>
 			<version>${ibm.mq.version}</version>
+		</dependency>
+
+		<!-- ========== PDF 生成相關 ========== -->
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>kernel</artifactId>
+			<version>${itext.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>layout</artifactId>
+			<version>${itext.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>io</artifactId>
+			<version>${itext.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>font-asian</artifactId>
+			<version>${itext.version}</version>
 		</dependency>
 
 		<!-- ========== 其他 ========== -->

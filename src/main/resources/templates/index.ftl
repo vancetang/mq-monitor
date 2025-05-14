@@ -42,6 +42,8 @@
 
             <button id="reconnectBtn" class="btn btn-warning ms-2">重新連接 MQ</button>
 
+            <button id="generateReportBtn" class="btn btn-success ms-2">產生報表</button>
+
             <div class="form-check form-switch ms-3">
                 <input class="form-check-input" type="checkbox" id="autoRefreshToggle" checked>
                 <label class="form-check-label" for="autoRefreshToggle">自動重新整理</label>
@@ -205,6 +207,7 @@
         // DOM 元素
         const refreshBtn = document.getElementById('refreshBtn');
         const reconnectBtn = document.getElementById('reconnectBtn');
+        const generateReportBtn = document.getElementById('generateReportBtn');
         const autoRefreshToggle = document.getElementById('autoRefreshToggle');
         const refreshIntervalSelect = document.getElementById('refreshInterval');
         const countdownElement = document.getElementById('countdown');
@@ -218,6 +221,7 @@
             // 事件監聽器
             refreshBtn.addEventListener('click', refreshPage);
             reconnectBtn.addEventListener('click', reconnectMQ);
+            generateReportBtn.addEventListener('click', generateReport);
             autoRefreshToggle.addEventListener('change', toggleAutoRefresh);
             refreshIntervalSelect.addEventListener('change', changeRefreshInterval);
 
@@ -428,6 +432,12 @@
             // 更新最後刷新時間
             updateLastRefreshTime();
             location.reload();
+        }
+
+        // 產生報表
+        function generateReport() {
+            // 打開 PDF 預覽頁面
+            window.open('/report/view', '_blank');
         }
 
         // 切換自動刷新
