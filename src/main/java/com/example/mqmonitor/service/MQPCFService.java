@@ -57,7 +57,8 @@ public class MQPCFService {
                 status.put("connected", true);
                 // 使用 getParameter 方法替代已棄用的 getStringParameterValue
                 status.put("startDate", (String) response.getParameter(CMQCFC.MQCACF_Q_MGR_START_DATE).getValue());
-                status.put("startTime", (String) response.getParameter(CMQCFC.MQCACF_Q_MGR_START_TIME).getValue());
+                String startTime = (String) response.getParameter(CMQCFC.MQCACF_Q_MGR_START_TIME).getValue();
+                status.put("startTime", StringUtils.replace(startTime, ".", ":"));
             }
         } catch (MQException e) {
             log.error("獲取 Queue Manager 狀態時發生錯誤: {}", e.getMessage(), e);
