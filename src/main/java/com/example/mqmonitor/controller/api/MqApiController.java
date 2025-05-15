@@ -1,4 +1,4 @@
-package com.example.mqmonitor.controller;
+package com.example.mqmonitor.controller.api;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @RequestMapping("/api/mq")
-public class MQMonitorRestController {
+public class MqApiController {
 
     @Autowired
     private MQPCFService mqpcfService;
