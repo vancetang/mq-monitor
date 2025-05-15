@@ -228,8 +228,8 @@ public class MQPCFService {
                     }
                 } catch (MQException e) {
                     // 檢查是否為連線錯誤
-                    mqConnectionService.checkConnectionError(e);
-                    channelInfo.put("status", "非作用中");
+                    boolean isConnectionError = mqConnectionService.checkConnectionError(e);
+                    channelInfo.put("status", isConnectionError ? "錯誤: " + e.getMessage() : "非作用中");
                     channelInfo.put("active", false);
                 }
 

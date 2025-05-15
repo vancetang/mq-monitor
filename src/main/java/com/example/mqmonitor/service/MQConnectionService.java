@@ -67,6 +67,7 @@ public class MQConnectionService {
         // 2161 (MQRC_Q_MGR_NOT_AVAILABLE)
         // 2059 (MQRC_Q_MGR_NOT_ACTIVE)
         // 2162 (MQRC_Q_MGR_STOPPING)
+        // https://www.ibm.com/docs/en/ibm-mq/9.4.x?topic=constants-mqrc-reason-codes
         if (e.getReason() == 2009 || e.getReason() == 2018 ||
                 e.getReason() == 2161 || e.getReason() == 2059 ||
                 e.getReason() == 2162) {
