@@ -228,8 +228,10 @@ public class MQPCFService {
                     }
                 } catch (MQException e) {
                     // 檢查是否為連線錯誤
-                    boolean isConnectionError = mqConnectionService.checkConnectionError(e);
-                    channelInfo.put("status", isConnectionError ? "錯誤: " + e.getMessage() : "非作用中");
+                    mqConnectionService.checkConnectionError(e);
+                    // MQRCCF_CHL_STATUS_NOT_FOUND 3065
+                    boolean isStatusNotFound = Objects.equals(e.getReason(), CMQCFC.MQRCCF_CHL_STATUS_NOT_FOUND);
+                    channelInfo.put("status", isStatusNotFound ? "非作用中" : "錯誤: " + e.getMessage());
                     channelInfo.put("active", false);
                 }
 
