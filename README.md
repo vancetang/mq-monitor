@@ -1,4 +1,4 @@
-# MQ Monitor
+# 📊 MQ Monitor
 
 ![版本](https://img.shields.io/badge/版本-0.0.1--SNAPSHOT-blue)
 ![Java](https://img.shields.io/badge/Java-21-orange)
@@ -7,7 +7,13 @@
 
 MQ Monitor 是一個用於監控 IBM MQ 佇列管理器、佇列和通道狀態的 Web 應用程式。它提供了直觀的儀表板和 RESTful API，讓使用者能夠即時監控 MQ 資源的運行狀況。系統具備自動和手動重新連線功能，確保在 MQ 連線斷開時能夠快速恢復連線。
 
-## 功能特點
+## 🌐 可用語言
+
+[![English](https://img.shields.io/badge/English-Click-yellow)](README_en.md)
+[![繁體中文](https://img.shields.io/badge/繁體中文-Click-orange)](README.md)
+[![简体中文](https://img.shields.io/badge/简体中文-Click-green)](README_zh-CN.md)
+
+## ✨ 功能特點
 
 - **佇列管理器監控**：顯示佇列管理器的連接狀態、啟動時間等資訊
 - **佇列監控**：顯示所有佇列的深度、使用率、連接數等資訊
@@ -18,7 +24,7 @@ MQ Monitor 是一個用於監控 IBM MQ 佇列管理器、佇列和通道狀態�
 - **RESTful API**：提供完整的 API 介面，方便與其他系統整合
 - **響應式設計**：適應不同螢幕尺寸的裝置
 
-## 技術架構
+## 🔧 技術架構
 
 - **後端**：
   - Java 21
@@ -34,13 +40,13 @@ MQ Monitor 是一個用於監控 IBM MQ 佇列管理器、佇列和通道狀態�
   - Bootstrap 5
   - JavaScript
 
-## 系統需求
+## 🖥️ 系統需求
 
 - Java 21 或更高版本
 - Maven 3.6 或更高版本
 - IBM MQ 伺服器 (本地或遠端)
 
-## 安裝與設定
+## 🚀 安裝與設定
 
 ### 1. 取得專案
 
@@ -61,19 +67,6 @@ mq-info:
   connName: YOUR_HOST(YOUR_PORT)
   user: YOUR_USERNAME
   password: YOUR_PASSWORD  # 可選，如果需要密碼認證
-
-# FreeMarker 配置
-spring:
-  freemarker:
-    template-loader-path: classpath:/templates/
-    suffix: .ftl
-    cache: false
-    charset: UTF-8
-    check-template-location: true
-    content-type: text/html
-    expose-request-attributes: true
-    expose-session-attributes: true
-    request-context-attribute: request
 ```
 
 ### 3. 編譯與打包
@@ -96,7 +89,7 @@ java -jar target/mq-monitor-0.0.1-SNAPSHOT.jar
 
 應用程式將在 http://localhost:8080 啟動。
 
-## 使用方法
+## 📝 使用方法
 
 ### Web 介面
 
@@ -125,7 +118,7 @@ curl http://localhost:8080/api/mq/status
 curl -X POST http://localhost:8080/api/mq/reconnect
 ```
 
-## API 文檔
+## 📘 API 文檔
 
 ### 佇列管理器狀態 API
 
@@ -208,23 +201,7 @@ POST /api/mq/reconnect
 }
 ```
 
-## 開發與貢獻
-
-### 開發環境設定
-
-1. 確保您已安裝 Java 21 和 Maven
-2. 克隆專案並導入到您的 IDE (Eclipse, IntelliJ IDEA 等)
-3. 執行 `MqMonitorApplication.java` 啟動應用程式
-
-### 建議與貢獻
-
-1. Fork 專案
-2. 創建您的功能分支 (`git checkout -b feature/amazing-feature`)
-3. 提交您的更改 (`git commit -m 'Add some amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 開啟一個 Pull Request
-
-## 專案結構
+## 📂 專案結構
 
 ```
 mq-monitor/
@@ -253,7 +230,7 @@ mq-monitor/
 └── README.md                      # 本文件
 ```
 
-## 檔案清單
+## 📋 檔案清單
 
 ### 配置類
 - `MQConfig.java` - MQ 連接配置，負責創建和管理 MQ 連接
@@ -289,11 +266,27 @@ mq-monitor/
 - `report.md` - 開發報告
 - `todolist.md` - 任務清單
 
-## 授權資訊
+## 👨‍💻 開發與貢獻
+
+### 開發環境設定
+
+1. 確保您已安裝 Java 21 和 Maven
+2. 克隆專案並導入到您的 IDE (Eclipse, IntelliJ IDEA 等)
+3. 執行 `MqMonitorApplication.java` 啟動應用程式
+
+### 建議與貢獻
+
+1. Fork 專案
+2. 創建您的功能分支 (`git checkout -b feature/amazing-feature`)
+3. 提交您的更改 (`git commit -m 'Add some amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 開啟一個 Pull Request
+
+## 📜 授權資訊
 
 本專案採用 [MIT 授權](LICENSE)。
 
-## 聯絡方式
+## 📞 聯絡方式
 
 如有任何問題或建議，請聯絡：
 
