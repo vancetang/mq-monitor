@@ -30,7 +30,7 @@ MQ Monitor 是一個用於監控 IBM MQ 佇列管理器、佇列和通道狀態�
   - Apache Commons Lang3
 
 - **前端**：
-  - FreeMarker 模板引擎
+  - Thymeleaf 模板引擎
   - Bootstrap 5
   - JavaScript
 
@@ -61,6 +61,14 @@ mq-info:
   connName: YOUR_HOST(YOUR_PORT)
   user: YOUR_USERNAME
   password: YOUR_PASSWORD  # 可選，如果需要密碼認證
+
+# Thymeleaf 配置
+spring:
+  thymeleaf:
+    cache: false
+    mode: HTML
+    encoding: UTF-8
+    prefix: classpath:/templates/
 ```
 
 ### 3. 編譯與打包
@@ -210,6 +218,41 @@ POST /api/mq/reconnect
 3. 提交您的更改 (`git commit -m 'Add some amazing feature'`)
 4. 推送到分支 (`git push origin feature/amazing-feature`)
 5. 開啟一個 Pull Request
+
+## 檔案結構
+
+1. **src/main/java/com/example/mqmonitor/**
+   - `MqMonitorApplication.java` - 應用程式入口點
+   - **config/** - 配置類
+     - `MQConfig.java` - MQ 連接配置
+     - `MQInfoProperties.java` - MQ 連接屬性
+   - **controller/** - 控制器類
+     - **api/** - API 控制器
+       - `MqApiController.java` - MQ API 端點
+     - **web/** - Web 控制器
+       - `HomeController.java` - 首頁控制器
+       - `ReportController.java` - 報表控制器
+   - **model/** - 資料模型
+     - `MQStatus.java` - MQ 狀態模型
+   - **service/** - 服務類
+     - `MQConnectionService.java` - MQ 連接服務
+     - `MQPCFService.java` - MQ PCF 命令服務
+     - `PdfReportService.java` - PDF 報表生成服務
+   - **scheduler/** - 排程器類
+     - `MQConnectionScheduler.java` - MQ 連接檢查排程器
+
+2. **src/main/resources/**
+   - **templates/** - Thymeleaf 模板
+     - `index.html` - 首頁模板
+     - `pdf-viewer.html` - PDF 預覽頁面模板
+   - `application.yml` - 應用程式配置
+   - `logback.xml` - 日誌配置
+
+3. **文檔檔案**
+   - `README.md` - 專案說明文件
+   - `spec.md` - 系統規格文件
+   - `report.md` - 開發報告
+   - `todolist.md` - 任務清單
 
 ## 授權資訊
 
