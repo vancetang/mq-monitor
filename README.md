@@ -290,4 +290,4 @@ mq-monitor/
 
 如有任何問題或建議，請聯絡：
 
-- GitHub Issues：[提交問題](https://github.com/yourusername/mq-monitor/issues)
+- GitHub Issues：[提交問題](https://github.com/vancetang/mq-monitor/issues)
