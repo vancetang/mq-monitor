@@ -30,7 +30,7 @@ MQ Monitor 是一個用於監控 IBM MQ 佇列管理器、佇列和通道狀態�
   - Apache Commons Lang3
 
 - **前端**：
-  - Thymeleaf 模板引擎
+  - FreeMarker 模板引擎
   - Bootstrap 5
   - JavaScript
 
@@ -62,13 +62,18 @@ mq-info:
   user: YOUR_USERNAME
   password: YOUR_PASSWORD  # 可選，如果需要密碼認證
 
-# Thymeleaf 配置
+# FreeMarker 配置
 spring:
-  thymeleaf:
+  freemarker:
+    template-loader-path: classpath:/templates/
+    suffix: .ftl
     cache: false
-    mode: HTML
-    encoding: UTF-8
-    prefix: classpath:/templates/
+    charset: UTF-8
+    check-template-location: true
+    content-type: text/html
+    expose-request-attributes: true
+    expose-session-attributes: true
+    request-context-attribute: request
 ```
 
 ### 3. 編譯與打包
@@ -219,40 +224,70 @@ POST /api/mq/reconnect
 4. 推送到分支 (`git push origin feature/amazing-feature`)
 5. 開啟一個 Pull Request
 
-## 檔案結構
+## 專案結構
 
-1. **src/main/java/com/example/mqmonitor/**
-   - `MqMonitorApplication.java` - 應用程式入口點
-   - **config/** - 配置類
-     - `MQConfig.java` - MQ 連接配置
-     - `MQInfoProperties.java` - MQ 連接屬性
-   - **controller/** - 控制器類
-     - **api/** - API 控制器
-       - `MqApiController.java` - MQ API 端點
-     - **web/** - Web 控制器
-       - `HomeController.java` - 首頁控制器
-       - `ReportController.java` - 報表控制器
-   - **model/** - 資料模型
-     - `MQStatus.java` - MQ 狀態模型
-   - **service/** - 服務類
-     - `MQConnectionService.java` - MQ 連接服務
-     - `MQPCFService.java` - MQ PCF 命令服務
-     - `PdfReportService.java` - PDF 報表生成服務
-   - **scheduler/** - 排程器類
-     - `MQConnectionScheduler.java` - MQ 連接檢查排程器
+```
+mq-monitor/
+├── .mvn/                          # Maven 包裝器目錄
+├── .vscode/                       # VS Code 配置
+├── src/
+│   ├── main/
+│   │   ├── java/com/example/mqmonitor/
+│   │   │   ├── config/            # 配置類
+│   │   │   ├── controller/        # 控制器
+│   │   │   │   ├── api/           # API 控制器
+│   │   │   │   └── web/           # Web 控制器
+│   │   │   ├── model/             # 資料模型
+│   │   │   ├── scheduler/         # 排程器
+│   │   │   ├── service/           # 服務層
+│   │   │   └── MqMonitorApplication.java
+│   │   └── resources/
+│   │       ├── META-INF/          # 額外配置元數據
+│   │       ├── templates/         # FreeMarker 模板
+│   │       ├── application.yml    # 應用程式配置
+│   │       └── logback.xml        # 日誌配置
+│   └── test/                      # 測試類
+├── pom.xml                        # Maven 配置
+├── spec.md                        # 規格文件
+├── todolist.md                    # 任務清單
+└── README.md                      # 本文件
+```
 
-2. **src/main/resources/**
-   - **templates/** - Thymeleaf 模板
-     - `index.html` - 首頁模板
-     - `pdf-viewer.html` - PDF 預覽頁面模板
-   - `application.yml` - 應用程式配置
-   - `logback.xml` - 日誌配置
+## 檔案清單
 
-3. **文檔檔案**
-   - `README.md` - 專案說明文件
-   - `spec.md` - 系統規格文件
-   - `report.md` - 開發報告
-   - `todolist.md` - 任務清單
+### 配置類
+- `MQConfig.java` - MQ 連接配置，負責創建和管理 MQ 連接
+- `MQInfoProperties.java` - MQ 連接屬性，從配置文件中讀取 MQ 連接參數
+
+### 控制器
+- **API 控制器**
+  - `MqApiController.java` - 提供 RESTful API 端點，用於獲取 MQ 狀態和觸發重新連線
+- **Web 控制器**
+  - `HomeController.java` - 處理主頁請求，顯示 MQ 監控儀表板
+  - `ReportController.java` - 處理報表生成和預覽請求
+
+### 資料模型
+- `MQStatus.java` - MQ 狀態模型，包含佇列管理器、佇列和通道的狀態資訊
+
+### 服務層
+- `MQConnectionService.java` - MQ 連接服務，負責管理與 MQ 的連接
+- `MQPCFService.java` - MQ PCF 命令服務，使用 PCF 命令獲取 MQ 資源狀態
+- `PdfReportService.java` - PDF 報表生成服務，生成 MQ 狀態報表
+
+### 排程器
+- `MQConnectionScheduler.java` - MQ 連接檢查排程器，定期檢查 MQ 連接狀態並自動重新連線
+
+### 資源文件
+- `application.yml` - 應用程式配置文件，包含 MQ 連接和 FreeMarker 配置
+- `logback.xml` - 日誌配置文件
+- `index.ftl` - 主頁 FreeMarker 模板
+- `pdf-viewer.ftl` - PDF 預覽頁面 FreeMarker 模板
+
+### 文檔文件
+- `README.md` - 專案說明文件
+- `spec.md` - 系統規格文件
+- `report.md` - 開發報告
+- `todolist.md` - 任務清單
 
 ## 授權資訊
 
@@ -262,5 +297,4 @@ POST /api/mq/reconnect
 
 如有任何問題或建議，請聯絡：
 
-- 電子郵件：your.email@example.com
 - GitHub Issues：[提交問題](https://github.com/yourusername/mq-monitor/issues)
