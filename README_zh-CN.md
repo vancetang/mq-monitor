@@ -284,7 +284,7 @@ mq-monitor/
 
 ## 📜 授权信息
 
-本项目采用 [MIT 授权](LICENSE)。
+本项目采用 [Apache License 2.0](LICENSE)。
 
 ## 📞 联系方式
 
