@@ -7,7 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.example.mqmonitor.config.MQInfoProperties;
+import com.example.mqmonitor.config.MQInfo;
 import com.ibm.mq.MQException;
 import com.ibm.mq.MQQueueManager;
 import com.ibm.mq.constants.MQConstants;
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MQConnectionService {
 
     @Autowired
-    private MQInfoProperties mqInfo;
+    private MQInfo mqInfo;
 
     private MQQueueManager mqQueueManager;
     private boolean isConnecting = false;
