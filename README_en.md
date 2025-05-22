@@ -234,7 +234,7 @@ mq-monitor/
 
 ### Configuration Classes
 - `MQConfig.java` - MQ connection configuration, responsible for creating and managing MQ connections.
-- `MQInfoProperties.java` - MQ connection properties, reads MQ connection parameters from the configuration file.
+- `MQInfo.java` - MQ connection properties, reads MQ connection parameters from the configuration file.
 
 ### Controllers
 - **API Controllers**

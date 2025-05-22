@@ -153,11 +153,11 @@ classDiagram
     }
     
     class MQConfig {
-        -MQInfoProperties mqInfoProperties
+        -MQInfo MQInfo
         +MQQueueManager createQueueManager() MQQueueManager
     }
     
-    class MQInfoProperties {
+    class MQInfo {
         -String queueManager
         -String channel
         -String connName
@@ -169,7 +169,7 @@ classDiagram
     
     class MQConnectionService {
         -MQQueueManager queueManager
-        -MQInfoProperties mqInfoProperties
+        -MQInfo MQInfo
         +connect() boolean
         +disconnect() void
         +reconnect() boolean
@@ -219,8 +219,8 @@ classDiagram
     }
     
     MQMonitorApplication --> MQConfig
-    MQConfig --> MQInfoProperties
-    MQConnectionService --> MQInfoProperties
+    MQConfig --> MQInfo
+    MQConnectionService --> MQInfo
     MQPCFService --> MQConnectionService
     PdfReportService --> MQPCFService
     MQConnectionScheduler --> MQConnectionService
@@ -236,20 +236,20 @@ classDiagram
 
 ### 6.1 RESTful API 端點
 
-| 端點 | 方法 | 描述 | 回應格式 |
-|------|------|------|----------|
-| `/api/mq/queuemanager` | GET | 獲取佇列管理器狀態 | JSON |
-| `/api/mq/queues` | GET | 獲取所有佇列狀態 | JSON |
-| `/api/mq/channels` | GET | 獲取所有通道狀態 | JSON |
-| `/api/mq/status` | GET | 獲取所有 MQ 資源的狀態 | JSON |
-| `/api/mq/reconnect` | POST | 手動觸發重新連接到 MQ | JSON |
-| `/report/generate` | GET | 生成 PDF 報表 | PDF |
+| 端點                   | 方法 | 描述                   | 回應格式 |
+| ---------------------- | ---- | ---------------------- | -------- |
+| `/api/mq/queuemanager` | GET  | 獲取佇列管理器狀態     | JSON     |
+| `/api/mq/queues`       | GET  | 獲取所有佇列狀態       | JSON     |
+| `/api/mq/channels`     | GET  | 獲取所有通道狀態       | JSON     |
+| `/api/mq/status`       | GET  | 獲取所有 MQ 資源的狀態 | JSON     |
+| `/api/mq/reconnect`    | POST | 手動觸發重新連接到 MQ  | JSON     |
+| `/report/generate`     | GET  | 生成 PDF 報表          | PDF      |
 
 ### 6.2 Web 頁面
 
-| 路徑 | 描述 | 模板 |
-|------|------|------|
-| `/` | 主儀表板頁面 | index.html |
+| 路徑      | 描述             | 模板            |
+| --------- | ---------------- | --------------- |
+| `/`       | 主儀表板頁面     | index.html      |
 | `/report` | PDF 報表預覽頁面 | pdf-viewer.html |
 
 ## 7. 部署架構

@@ -234,7 +234,7 @@ mq-monitor/
 
 ### 配置类
 - `MQConfig.java` - MQ 连接配置，负责创建和管理 MQ 连接
-- `MQInfoProperties.java` - MQ 连接属性，从配置文件中读取 MQ 连接参数
+- `MQInfo.java` - MQ 连接属性，从配置文件中读取 MQ 连接参数
 
 ### 控制器
 - **API 控制器**
