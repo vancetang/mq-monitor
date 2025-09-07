@@ -3,9 +3,9 @@
 
 # 程式碼檔案，使用 LF 行結尾（Unix 風格，跨平台一致性）
 *.java text eol=lf
-*.jsp text eol=lf
-*.js text eol=lf
-*.py text eol=lf
+*.jsp  text eol=lf
+*.js   text eol=lf
+*.py   text eol=lf
 
 # 標記與前端相關
 *.css        text eol=lf
@@ -18,9 +18,9 @@
 
 # 資源檔案和配置檔案，使用 LF 行結尾
 *.properties text eol=lf
-*.yml text eol=lf
-*.yaml text eol=lf
-*.xml text eol=lf
+*.yml        text eol=lf
+*.yaml       text eol=lf
+*.xml        text eol=lf
 *.json       text eol=lf
 *.jsonc      text eol=lf
 *.toml       text eol=lf
@@ -32,7 +32,7 @@ Makefile     text eol=lf
 Dockerfile   text eol=lf
 
 # Shell 腳本，使用 LF 行結尾（Unix 環境執行）
-*.sh text eol=lf
+*.sh  text eol=lf
 
 # Windows 批次檔案，使用 CRLF 行結尾（Windows 環境執行）
 *.bat text eol=crlf
@@ -40,52 +40,14 @@ Dockerfile   text eol=lf
 *.ps1 text eol=crlf
 
 # 文件檔案，使用 LF 行結尾（跨平台一致性）
-*.md text eol=lf diff=markdown
+*.md  text eol=lf diff=markdown
 *.txt text eol=lf
 
 # Git 相關檔案，使用 LF 行結尾
 .gitattributes text eol=lf
-.gitignore text eol=lf
-
-# --- 二進位檔案：停用行尾與 diff ---
-# 影像
-*.png  binary
-*.jpg  binary
-*.jpeg binary
-*.gif  binary
-*.webp binary
-*.ico  binary
-*.psd  binary
-*.ai   binary
-*.eps  binary
-
-# 字型
-*.ttf  binary
-*.otf  binary
-*.woff binary
-*.woff2 binary
-
-# 文件與試算表
-*.pdf  binary
-*.doc  binary
-*.docx binary
-*.xls  binary
-*.xlsx binary
-*.ppt  binary
-*.pptx binary
-
-# 壓縮與封裝
-*.zip  binary
-*.7z   binary
-*.rar  binary
-*.gz   binary
-*.bz2  binary
-*.tar  binary
-*.jar  binary
-*.apk  binary
-*.ipa  binary
+.gitignore     text eol=lf
 
 # --- 降噪：縮小無意義 diff ---
-*.min.js -diff
+*.min.js  -diff
 *.min.css -diff
-*.map    -diff
+*.map     -diff
