@@ -25,7 +25,7 @@ springdoc:
 mq-info:
   queueManager: MQJ006D
   channel: DEV.ADMIN.SVRCONN
-  connName: localhost(3434)
+  connName: localhost(2424)
   user: mqm
 
 # 伺服器配置
