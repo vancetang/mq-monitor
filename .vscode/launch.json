@@ -6,7 +6,7 @@
             "name": "Attach to Open Liberty",
             "request": "attach",
             "hostName": "localhost",
-            "port": 10542 // 替換為日誌中的 Liberty debug port，如果可以固定port就好
+            "port": 7777 // 預設7777 替換為日誌中的 Liberty debug port，如果可以固定port就好
         }
     ]
 }
