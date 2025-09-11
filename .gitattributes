@@ -31,6 +31,10 @@
 Makefile     text eol=lf
 Dockerfile   text eol=lf
 
+# 資料庫相關，使用 LF 行結尾
+*.sql        text eol=lf
+*.ddl        text eol=lf
+
 # Shell 腳本，使用 LF 行結尾（Unix 環境執行）
 *.sh  text eol=lf
 
