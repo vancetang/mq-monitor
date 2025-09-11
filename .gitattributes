@@ -2,10 +2,10 @@
 * -text
 
 # 程式碼檔案，使用 LF 行結尾（Unix 風格，跨平台一致性）
-*.java text eol=lf
-*.jsp  text eol=lf
-*.js   text eol=lf
-*.py   text eol=lf
+*.java       text eol=lf
+*.jsp        text eol=lf
+*.js         text eol=lf
+*.py         text eol=lf
 
 # 標記與前端相關
 *.css        text eol=lf
@@ -36,16 +36,16 @@ Dockerfile   text eol=lf
 *.ddl        text eol=lf
 
 # Shell 腳本，使用 LF 行結尾（Unix 環境執行）
-*.sh  text eol=lf
+*.sh         text eol=lf
 
 # Windows 批次檔案，使用 CRLF 行結尾（Windows 環境執行）
-*.bat text eol=crlf
-*.cmd text eol=crlf
-*.ps1 text eol=crlf
+*.bat        text eol=crlf
+*.cmd        text eol=crlf
+*.ps1        text eol=crlf
 
 # 文件檔案，使用 LF 行結尾（跨平台一致性）
-*.md  text eol=lf diff=markdown
-*.txt text eol=lf
+*.md         text eol=lf diff=markdown
+*.txt        text eol=lf
 
 # Git 相關檔案，使用 LF 行結尾
 .gitattributes text eol=lf
