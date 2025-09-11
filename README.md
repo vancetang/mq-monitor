@@ -71,23 +71,126 @@ mq-info:
 
 ### 3. 編譯與打包
 
-```bash
-./mvnw clean package
+```powershell
+mvn clean package
 ```
 
-### 4. 執行應用程式
+說明：本專案採用 WAR 打包（外部容器部署），本地開發建議使用 Spring Boot 的 embedded 模式：
 
-```bash
-java -jar target/mq-monitor-0.0.1-SNAPSHOT.jar
-```
+### 4. 本地開發啟動（Embedded Tomcat）
 
-或使用 Maven 直接執行：
-
-```bash
-./mvnw spring-boot:run
+```powershell
+mvn spring-boot:run
 ```
 
 應用程式將在 http://localhost:8080 啟動。
+
+### 5. 外部容器部署（Tomcat / IBM Liberty）
+- 產物：`target\mq-monitor-0.0.1-SNAPSHOT.war`
+- Tomcat：複製 WAR 至 `CATALINA_BASE\webapps` 或使用管理工具部署
+- IBM Liberty：複製 WAR 至 `wlp\usr\servers\<YourServer>\dropins` 或依 server.xml 配置的 apps 目錄
+
+## Tomcat 與 IBM Liberty 的 JNDI 設定與 Debug 指南
+
+### Spring Boot：建議使用 profile（container）管理 JNDI 設定
+- 建立 `src/main/resources/application-container.yml` 並啟用 profile `container`（見下方「啟用 Spring Profile」）。
+- 內容：
+
+```yaml
+spring:
+  datasource:
+    jndi-name: java:comp/env/jndi/eltwdb
+```
+
+此作法讓預設（embedded）啟動不會嘗試 JNDI 查詢；僅在容器（Tomcat/Liberty）佈署或你手動啟用 profile 時才啟用 JNDI。
+
+### Tomcat 設定
+1) 將 DB2 JDBC Driver jar 置於 `CATALINA_BASE\lib`
+2) 在 `conf/server.xml` 的 `GlobalNamingResources` 宣告 DataSource：
+
+```xml
+<GlobalNamingResources>
+  <Resource name="jndi/eltwdb" auth="Container"
+    type="javax.sql.DataSource" driverClassName="com.ibm.db2.jcc.DB2Driver"
+    url="jdbc:db2://127.0.0.1:50000/eltw"
+    username="vance" password="1qaz2wsx"
+    maxTotal="50" maxIdle="10" validationQuery="SELECT 1 FROM SYSIBM.SYSDUMMY1"/>
+</GlobalNamingResources>
+```
+
+3) 在 `conf/context.xml` 建立 ResourceLink（讓 WebApp 取用）：
+
+```xml
+<Context>
+  <ResourceLink name="jndi/eltwdb" global="jndi/eltwdb"
+    type="javax.sql.DataSource"/>
+</Context>
+```
+
+4) 啟動與 Debug（JPDA，PowerShell）：
+
+```powershell
+$env:JPDA_ADDRESS="*:8000" && $env:JPDA_TRANSPORT="dt_socket" && .\bin\catalina.bat jpda start
+```
+
+5) spring-boot-starter-tomcat 的 jar 實體路徑（僅嵌入式情境用）：
+- Windows 本機 Maven 倉庫：`C:\Users\<YourUser>\.m2\repository`
+  - `org\springframework\boot\spring-boot-starter-tomcat\<version>\spring-boot-starter-tomcat-<version>.jar`
+  - 內嵌 Tomcat：`org\apache\tomcat\embed\tomcat-embed-core\<version>\tomcat-embed-core-<version>.jar`
+
+### IBM Liberty 設定
+1) 將 DB2 Driver jar 置於 `${server.config.dir}/resources`
+2) `server.xml` 定義 library 與 dataSource（與 Tomcat 使用同一個 JNDI 名稱）：
+
+```xml
+<library id="eltwdbLib">
+  <fileset dir="${server.config.dir}/resources"/>
+</library>
+<dataSource jndiName="jndi/eltwdb">
+  <jdbcDriver libraryRef="eltwdbLib"/>
+  <properties serverName="127.0.0.1" portNumber="50000"
+    databaseName="eltw" user="vance" password="1qaz2wsx" driverType="4"/>
+</dataSource>
+```
+
+> 提示：請依實際情況啟用相容的 Liberty features（例如 `servlet-6.0`、`jdbc-4.3` 等）。
+
+### 啟用 Spring Profile（container）
+- 外部 Tomcat：`bin\setenv.bat` 增加
+
+```bat
+set "CATALINA_OPTS=%CATALINA_OPTS% -Dspring.profiles.active=container"
+```
+
+- IBM Liberty：`${server.config.dir}/jvm.options` 增加
+
+```
+-Dspring.profiles.active=container
+```
+
+
+### Liberty Maven Plugin 使用
+
+- 開發熱重載（Dev Mode）
+```powershell
+mvn liberty:dev
+```
+
+- 建立/啟動/停止伺服器（非前景）
+```powershell
+mvn liberty:create && mvn liberty:start
+mvn liberty:stop
+```
+
+- 部署/移除 WAR
+```powershell
+mvn -DskipTests package && mvn liberty:deploy
+mvn liberty:undeploy
+```
+
+注意：目前已加入外掛 3.11.5，但尚未設定 runtimeArtifact（自動下載 Liberty）。
+- 若你本機已安裝 Liberty，以上指令可直接使用本機安裝。
+- 若需外掛自動下載，請提供 runtimeArtifact 座標（groupId/artifactId/version/type=zip），我會補上到 pom.xml。
 
 ## 📝 使用方法
 

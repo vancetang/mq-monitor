@@ -181,3 +181,25 @@ MQ Monitor 是一個用於監控 IBM MQ 佇列管理器、佇列和通道狀態�
 MQ Monitor 專案成功實現了對 IBM MQ 資源的監控功能，提供了直觀的 Web 界面和完整的 API 接口。通過自動和手動重新連線功能，確保了系統的可靠性。PDF 報表功能為用戶提供了更多的數據分析和分享方式。
 
 專案採用了現代化的技術棧和架構設計，具有良好的可擴展性和可維護性。未來可以根據用戶反饋和需求，進一步優化和擴展系統功能。
+
+
+## 協調者模式：子任務完成報告（雙模式部署與 JNDI）
+
+- 已調整 Maven 依賴：加入 DB2 JDBC `com.ibm.db2:jcc:12.1.2.0`（scope=provided）
+- 已更新 README：新增 Tomcat/Liberty 的 JNDI 設定、JPDA Debug、profile 啟用方式
+- 已新增 `application-container.yml`：集中管理 `spring.datasource.jndi-name`
+- 已進行建置驗證：`mvn -DskipTests package` 成功
+- 已於 spec.md 新增 UML：
+  - 部署/模式流程圖（flowchart）
+  - JNDI 取得資料來源循序圖（sequence）
+  - 組件/物件關聯圖（classDiagram 摘要）
+
+後續待辦
+- 選擇 liberty-maven-plugin 安裝方式（使用本機 Liberty 或由外掛自動下載）
+- 依你的授權查詢最新穩定版與相容性，並加入 pom.xml（附常用指令與 README 節）
+
+Checkpoint 建議（Conventional Commits）
+- feat(db): add DB2 JDBC driver as provided for container-managed JNDI
+- docs(readme): add Tomcat & Liberty JNDI setup and JPDA debug guide
+- docs(spec): document dual-mode deployment and JNDI UML diagrams
+- docs: add container profile and usage notes

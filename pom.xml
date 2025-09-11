@@ -12,6 +12,8 @@
 	<groupId>com.example.mqmonitor</groupId>
 	<artifactId>mq-monitor</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>war</packaging>
+
 	<name>mq-monitor</name>
 	<description>IBM MQ Monitor</description>
 	<properties>
@@ -26,6 +28,18 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-tomcat</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<!-- 使用外部容器（IBM Liberty）時，內嵌 Tomcat 需改為 provided -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-tomcat</artifactId>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -89,6 +103,15 @@
 			<artifactId>com.ibm.mq.allclient</artifactId>
 			<version>${ibm.mq.version}</version>
 		</dependency>
+
+		<!-- ========== DB2 JDBC Driver（僅供容器提供，WAR 不內含） ========== -->
+		<dependency>
+			<groupId>com.ibm.db2</groupId>
+			<artifactId>jcc</artifactId>
+			<version>12.1.2.0</version>
+			<scope>provided</scope>
+		</dependency>
+
 
 		<!-- ========== PDF 生成相關 ========== -->
 		<dependency>
@@ -160,6 +183,24 @@
 							<artifactId>lombok</artifactId>
 						</exclude>
 					</excludes>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>io.openliberty.tools</groupId>
+				<artifactId>liberty-maven-plugin</artifactId>
+				<version>3.11.5</version>
+				<configuration>
+					<!-- 啟用鬆綁部署，提升開發/部署效率 -->
+					<looseApplication>true</looseApplication>
+					<!--
+						自動下載 Liberty（待你提供 runtimeArtifact 座標後啟用），範例：
+						<runtimeArtifact>
+							<groupId>io.openliberty</groupId>
+							<artifactId>openliberty-runtime</artifactId>
+							<version>PLEASE_PROVIDE</version>
+							<type>zip</type>
+						</runtimeArtifact>
+					-->
 				</configuration>
 			</plugin>
 		</plugins>
