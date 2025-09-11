@@ -53,18 +53,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-starter-tomcat</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<!-- 使用外部容器（IBM Liberty）時，內嵌 Tomcat 需改為 provided -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -325,22 +313,14 @@
 					</excludes>
 				</configuration>
 			</plugin>
+
+			<!-- Maven War Plugin（預設配置） -->
 			<plugin>
-				<groupId>io.openliberty.tools</groupId>
-				<artifactId>liberty-maven-plugin</artifactId>
-				<version>3.11.5</version>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>${maven.war.plugin.version}</version>
 				<configuration>
-					<!-- 啟用鬆綁部署，提升開發/部署效率 -->
-					<looseApplication>true</looseApplication>
-					<!--
-						自動下載 Liberty（待你提供 runtimeArtifact 座標後啟用），範例：
-						<runtimeArtifact>
-							<groupId>io.openliberty</groupId>
-							<artifactId>openliberty-runtime</artifactId>
-							<version>PLEASE_PROVIDE</version>
-							<type>zip</type>
-						</runtimeArtifact>
-					-->
+					<failOnMissingWebXml>false</failOnMissingWebXml>
 				</configuration>
 			</plugin>
 		</plugins>
