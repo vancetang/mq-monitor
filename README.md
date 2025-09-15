@@ -194,6 +194,16 @@ mvn liberty:undeploy
 
 ## 📝 使用方法
 
+### local development spring-boot package
+```powershell
+mvn clean package -DskipTests
+```
+
+### package war for liberty container
+```powershell
+mvn clean package -DskipTests -P liberty
+```
+
 ### Web 介面
 
 1. 開啟瀏覽器，訪問 http://localhost:8080
