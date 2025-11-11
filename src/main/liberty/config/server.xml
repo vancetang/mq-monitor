@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<server description="new server">
+
+    <!-- Enable features -->
+    <featureManager>
+        <!-- Spring Boot 3.0 支援 -->
+        <feature>springBoot-3.0</feature>
+        <!-- 必要：解鎖 httpEndpoint 和 web 功能 -->
+        <feature>servlet-6.0</feature>
+        <!-- JNDI 支援 -->
+        <feature>jndi-1.0</feature>
+        <!-- JDBC 支援 -->
+        <feature>jdbc-4.3</feature>
+        <feature>pages-3.1</feature>
+    </featureManager>
+
+    <!-- HTTP/HTTPS 端點：host="*" 允許遠端存取 -->
+    <httpEndpoint id="defaultHttpEndpoint"
+        host="*"
+        httpPort="9080"
+        httpsPort="9443" />
+
+    <!-- 部署應用 -->
+    <webApplication contextRoot="/" location="mq-monitor-0.0.1-SNAPSHOT.war" />
+
+    <!-- 自動展開 WAR 文件和 EAR 文件 -->
+    <applicationManager autoExpand="true" />
+</server>
