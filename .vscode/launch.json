@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "MqMonitorApplication",
+            "request": "launch",
+            "mainClass": "com.example.mqmonitor.MqMonitorApplication",
+            "projectName": "mq-monitor"
+        },
+        {
+            "type": "java",
+            "name": "Attach to Open Liberty",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 7777
+        }
+    ]
+}

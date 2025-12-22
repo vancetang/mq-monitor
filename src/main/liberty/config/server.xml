@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<server description="new server">
+
+    <!-- Enable features -->
+    <featureManager>
+        <!-- Spring Boot 3.0 支援 -->
+        <feature>springBoot-3.0</feature>
+        <!-- Servlet 6.0 支援 (提供標準的 Java Servlet API，httpEndpoint 和基本 Web 功能) -->
+        <feature>servlet-6.0</feature>
+        <!-- JNDI 支援 -->
+        <feature>jndi-1.0</feature>
+        <!-- JDBC 支援 -->
+        <feature>jdbc-4.3</feature>
+        <!-- JSP/JSF 頁面支援 (JavaServer Pages 3.1，允許使用 JSP 技術建立動態網頁內容) -->
+        <feature>pages-3.1</feature>
+        <!-- JAXB (提供物件與 XML 之間的序列化與反序列化功能) -->
+        <feature>xmlBinding-4.0</feature>
+    </featureManager>
+
+    <!-- HTTP/HTTPS 端點：host="*" 允許遠端存取 -->
+    <httpEndpoint id="defaultHttpEndpoint"
+        host="*"
+        httpPort="9080"
+        httpsPort="9443" />
+
+    <!-- 部署應用 -->
+    <webApplication contextRoot="/" location="mq-monitor-0.0.1-SNAPSHOT.war" />
+
+    <!-- 自動展開 WAR 文件和 EAR 文件 -->
+    <applicationManager autoExpand="true" />
+</server>

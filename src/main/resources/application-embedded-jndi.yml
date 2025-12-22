@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    # 使用內嵌Tomcat提供的JNDI DataSource
+    jndi-name: java:comp/env/jndi/eltwdb
+  
+  # 啟用JNDI支援
+  jndi:
+    ignore-resource-not-found: false
+
+# 日誌配置，用於除錯JNDI問題
+logging:
+  level:
+    org.apache.catalina.core: DEBUG
+    org.apache.naming: DEBUG
+    org.springframework.jndi: DEBUG
+    com.example.mqmonitor.config: DEBUG

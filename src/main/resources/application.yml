@@ -11,6 +11,23 @@ spring:
     expose-request-attributes: true
     expose-session-attributes: true
     request-context-attribute: request
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
+  task:
+    execution:
+      pool:
+        core-size: 4 # 核心執行緒數（常駐執行緒）
+        max-size: 8 # 最大執行緒數
+        queue-capacity: 100 # 任務佇列容量
+        keep-alive: 60s # 空閒線程存活時間
+      thread-name-prefix: async-task- # 線程名前綴（方便排查問題）
+    scheduling:
+      pool:
+        size: 4 # 定時任務執行緒池大小
+      thread-name-prefix: scheduling- # 定時任務執行緒名稱前綴
 
 # Swagger UI: http://localhost:8080/swagger-ui.html
 # API Docs (JSON): http://localhost:8080/v3/api-docs
@@ -25,7 +42,7 @@ springdoc:
 mq-info:
   queueManager: MQJ006D
   channel: DEV.ADMIN.SVRCONN
-  connName: localhost(3434)
+  connName: localhost(2424)
   user: mqm
 
 # 伺服器配置
