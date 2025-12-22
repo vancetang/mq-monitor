@@ -100,7 +100,7 @@ sequenceDiagram
     participant MQConn as MQ 連接服務
     participant MQService as MQ 服務
     participant Scheduler as 排程器
-    
+
     App->>Config: 加載配置
     Config->>App: 返回 MQ 連接配置
     App->>MQConn: 初始化 MQ 連接服務
@@ -118,7 +118,7 @@ sequenceDiagram
     participant API as API 控制器
     participant Service as MQ 服務
     participant MQ as IBM MQ
-    
+
     User->>UI: 訪問儀表板
     UI->>API: 請求 MQ 狀態
     API->>Service: 獲取 MQ 狀態
@@ -126,7 +126,7 @@ sequenceDiagram
     MQ->>Service: 返回資源狀態
     Service->>API: 返回 MQ 狀態
     API->>UI: 顯示 MQ 狀態
-    
+
     User->>UI: 點擊「重新連接」按鈕
     UI->>API: 發送重新連接請求
     API->>Service: 執行重新連接
@@ -134,7 +134,7 @@ sequenceDiagram
     MQ->>Service: 返回連接結果
     Service->>API: 返回操作結果
     API->>UI: 顯示操作結果
-    
+
     User->>UI: 點擊「產生報表」按鈕
     UI->>API: 請求生成報表
     API->>Service: 生成 PDF 報表
@@ -151,12 +151,12 @@ classDiagram
     class MQMonitorApplication {
         +main(String[] args) void
     }
-    
+
     class MQConfig {
         -MQInfo MQInfo
         +MQQueueManager createQueueManager() MQQueueManager
     }
-    
+
     class MQInfo {
         -String queueManager
         -String channel
@@ -166,7 +166,7 @@ classDiagram
         +getters()
         +setters()
     }
-    
+
     class MQConnectionService {
         -MQQueueManager queueManager
         -MQInfo MQInfo
@@ -175,7 +175,7 @@ classDiagram
         +reconnect() boolean
         +isConnected() boolean
     }
-    
+
     class MQPCFService {
         -MQConnectionService connectionService
         +getQueueManagerStatus() QueueManagerStatus
@@ -183,17 +183,17 @@ classDiagram
         +getChannelsStatus() List~ChannelStatus~
         +getAllStatus() MQStatus
     }
-    
+
     class PdfReportService {
         -MQPCFService mqPcfService
         +generateReport() byte[]
     }
-    
+
     class MQConnectionScheduler {
         -MQConnectionService connectionService
         +checkConnection() void
     }
-    
+
     class MqApiController {
         -MQPCFService mqPcfService
         -MQConnectionService connectionService
@@ -204,20 +204,20 @@ classDiagram
         +getAllStatus() ResponseEntity
         +reconnect() ResponseEntity
     }
-    
+
     class HomeController {
         -MQPCFService mqPcfService
         -MQConnectionService connectionService
         +index(Model model) String
         +reconnect(RedirectAttributes redirectAttributes) String
     }
-    
+
     class ReportController {
         -PdfReportService pdfReportService
         +viewPdfPage() String
         +generatePdf() ResponseEntity~byte[]~
     }
-    
+
     MQMonitorApplication --> MQConfig
     MQConfig --> MQInfo
     MQConnectionService --> MQInfo
@@ -259,11 +259,11 @@ graph TD
     Client[使用者瀏覽器] -->|HTTP| Server[應用伺服器]
     Server -->|JVM| SpringBoot[Spring Boot 應用]
     SpringBoot -->|MQ Client| MQServer[IBM MQ 伺服器]
-    
+
     subgraph "應用伺服器"
         SpringBoot
     end
-    
+
     subgraph "MQ 伺服器"
         MQServer -->|管理| QueueManager[佇列管理器]
         QueueManager -->|包含| Queues[佇列]
@@ -301,3 +301,47 @@ graph TD
 4. **性能測試**：
    - 測試系統在高負載下的性能
    - 測試自動重新連線功能的可靠性
+
+
+## 10. 容器與資料庫整合（JNDI）
+
+### 10.1 雙模式部署策略
+- 本地開發（建議）：外部 Tomcat 啟動與除錯（JPDA），使用容器提供的 JNDI DataSource
+- 佈署到 IBM Liberty：打包 WAR，使用相同 JNDI 名稱
+- 內嵌啟動（選用）：預設不啟用 JNDI，透過 `container` profile 啟用 JNDI
+
+```mermaid
+flowchart LR
+    A[開發者] -->|mvn spring-boot:run| B[Embedded]
+    A -->|外部 Tomcat| C[Tomcat]
+    A -->|WAR 部署| D[IBM Liberty]
+    B -.不使用 JNDI.-> E[(App)]
+    C -->|JNDI: jndi/eltwdb| E
+    D -->|JNDI: jndi/eltwdb| E
+```
+
+### 10.2 JNDI 取得資料來源流程
+```mermaid
+sequenceDiagram
+    participant App as 應用程式
+    participant Ctx as 容器JNDI
+    participant DS as DataSource
+    participant DB as DB2
+    App->>Ctx: java:comp/env/jndi/eltwdb
+    Ctx->>DS: 解析資源
+    DS->>DB: 驗證/建立連線
+    DB-->>DS: 成功
+    DS-->>App: 傳回連線
+```
+
+### 10.3 物件/組件關聯圖（摘要）
+```mermaid
+classDiagram
+    class App
+    class JNDIRegistry
+    class DataSource
+    class DB2
+    App --> JNDIRegistry : lookup(java:comp/env/jndi/eltwdb)
+    JNDIRegistry --> DataSource
+    DataSource --> DB2
+```

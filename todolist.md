@@ -133,3 +133,13 @@
 - [ ] 添加更多交互功能
 - [ ] 支援多語言
 - [ ] 添加用戶自定義儀表板
+
+
+## 21. 容器/JNDI 與雙模式部署
+- [x] 調整為 WAR 打包，保留本地開發便利性
+- [x] 新增 DB2 JDBC 依賴（scope=provided）
+- [x] 撰寫 Tomcat 與 IBM Liberty 的 JNDI 設定與 Debug 指南（README）
+- [x] 新增 `application-container.yml`（JNDI 以 profile 啟用）
+- [ ] （待選）加入 liberty-maven-plugin 並提供一鍵部署流程
+- [ ] （待）精確查詢 liberty-maven-plugin 最新穩定版本與相容性矩陣
+- [ ] （待）新增 docs/ 部署教學圖解（可從 spec.md 摘要）

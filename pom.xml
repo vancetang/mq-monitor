@@ -12,17 +12,42 @@
 	<groupId>com.example.mqmonitor</groupId>
 	<artifactId>mq-monitor</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>war</packaging>
+
 	<name>mq-monitor</name>
 	<description>IBM MQ Monitor</description>
+
 	<properties>
 		<java.version>21</java.version>
 		<springdoc.openapi.version>2.8.15</springdoc.openapi.version>
 		<commons.lang3.version>3.20.0</commons.lang3.version>
 		<ibm.mq.version>9.4.4.1</ibm.mq.version>
 		<itext.version>7.2.6</itext.version>
+		<db2.jcc.version>12.1.2.0</db2.jcc.version>
+		<maven.war.plugin.version>3.4.0</maven.war.plugin.version>
+		<liberty.server.version>25.0.0.8</liberty.server.version>
+		<liberty.plugin.version>3.11.5</liberty.plugin.version>
 	</properties>
+
+	<!-- 統一管理依賴項版本 -->
+	<dependencyManagement>
+		<dependencies>
+			<!-- Liberty 提供的依賴項版本管理 -->
+			<dependency>
+				<groupId>com.ibm.db2</groupId>
+				<artifactId>jcc</artifactId>
+				<version>${db2.jcc.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>jakarta.servlet</groupId>
+				<artifactId>jakarta.servlet-api</artifactId>
+				<version>6.0.0</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
-		<!-- ================ Spring 主要 ================ -->
+		<!-- ================ Spring Boot 核心依賴 ================ -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -43,6 +68,8 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-freemarker</artifactId>
 		</dependency>
+
+		<!-- ================ Spring Boot 開發與測試 ================ -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -54,16 +81,13 @@
 			<scope>runtime</scope>
 			<optional>true</optional>
 		</dependency>
-
-		<!-- ================ Spring 必要 ================ -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>
 		</dependency>
 
-		<!-- ================ Spring 選用 ================ -->
-		<!-- swagger-ui -->
+		<!-- ================ API 文件生成 ================ -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
@@ -76,21 +100,21 @@
 			</exclusions>
 		</dependency>
 
-		<!-- ========== Apache Library ========== -->
+		<!-- ================ 工具庫 ================ -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 			<version>${commons.lang3.version}</version>
 		</dependency>
 
-		<!-- ========== 常用Third-Party Library ========== -->
+		<!-- ================ IBM MQ 客戶端 ================ -->
 		<dependency>
 			<groupId>com.ibm.mq</groupId>
 			<artifactId>com.ibm.mq.allclient</artifactId>
 			<version>${ibm.mq.version}</version>
 		</dependency>
 
-		<!-- ========== PDF 生成相關 ========== -->
+		<!-- ================ PDF 生成相關 ================ -->
 		<dependency>
 			<groupId>com.itextpdf</groupId>
 			<artifactId>kernel</artifactId>
@@ -122,18 +146,133 @@
 			<version>${itext.version}</version>
 		</dependency>
 
-		<!-- ========== 其他 ========== -->
+		<!-- ================ 編譯時依賴 ================ -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<!-- Lombok 不需打包到 JAR 或 WAR 檔案中(只有編譯時期會需要到) -->
 			<scope>provided</scope>
 		</dependency>
-
 	</dependencies>
 
+	<profiles>
+		<!-- ================ 開發環境 Profile ================ -->
+		<profile>
+			<id>dev</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<dependencies>
+				<!-- 開發時 DB2 JDBC Driver 需要在 runtime 中 -->
+				<dependency>
+					<groupId>com.ibm.db2</groupId>
+					<artifactId>jcc</artifactId>
+					<scope>runtime</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+
+		<!-- ================ Liberty 部署環境 Profile ================ -->
+		<profile>
+			<id>liberty</id>
+			<dependencies>
+				<!-- Spring Boot Web，排除內建 Tomcat -->
+				<dependency>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-web</artifactId>
+					<exclusions>
+						<exclusion>
+							<groupId>org.springframework.boot</groupId>
+							<artifactId>spring-boot-starter-tomcat</artifactId>
+						</exclusion>
+					</exclusions>
+				</dependency>
+
+				<!-- Spring Boot Validation，排除 Tomcat 相關 -->
+				<dependency>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-validation</artifactId>
+					<exclusions>
+						<exclusion>
+							<groupId>org.apache.tomcat.embed</groupId>
+							<artifactId>tomcat-embed-el</artifactId>
+						</exclusion>
+					</exclusions>
+				</dependency>
+
+				<!-- Liberty 提供的依賴項，設為 provided scope -->
+				<dependency>
+					<groupId>jakarta.servlet</groupId>
+					<artifactId>jakarta.servlet-api</artifactId>
+					<scope>provided</scope>
+				</dependency>
+
+				<dependency>
+					<groupId>com.ibm.db2</groupId>
+					<artifactId>jcc</artifactId>
+					<scope>provided</scope>
+				</dependency>
+			</dependencies>
+
+			<build>
+				<plugins>
+					<!-- Maven War Plugin：自動排除 provided 依賴項 -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-war-plugin</artifactId>
+						<version>${maven.war.plugin.version}</version>
+						<configuration>
+							<failOnMissingWebXml>false</failOnMissingWebXml>
+							<!-- 自動排除 lib-provided 資料夾中的所有內容 -->
+							<packagingExcludes>
+								**/lib-provided/**,
+								WEB-INF/lib/lombok-*.jar
+							</packagingExcludes>
+							<!-- 確保 WAR 檔案結構正確 -->
+							<archive>
+								<manifest>
+									<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+									<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+								</manifest>
+							</archive>
+						</configuration>
+					</plugin>
+
+					<!-- Spring Boot Maven Plugin：Liberty 模式下停用重新打包 -->
+					<plugin>
+						<groupId>org.springframework.boot</groupId>
+						<artifactId>spring-boot-maven-plugin</artifactId>
+						<configuration>
+							<!-- 停用重新打包，使用標準 WAR 結構 -->
+							<skip>true</skip>
+						</configuration>
+					</plugin>
+
+					<!-- Liberty Maven Plugin -->
+					<plugin>
+						<groupId>io.openliberty.tools</groupId>
+						<artifactId>liberty-maven-plugin</artifactId>
+						<version>${liberty.plugin.version}</version>
+						<configuration>
+							<looseApplication>true</looseApplication>
+							<configuration>
+								<runtimeArtifact>
+									<groupId>com.ibm.websphere.appserver.runtime</groupId>
+									<artifactId>wlp-webProfile10</artifactId>
+									<version>${liberty.server.version}</version>
+									<type>zip</type>
+								</runtimeArtifact>
+							</configuration>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
+	<!-- ================ 基本建置設定 ================ -->
 	<build>
 		<plugins>
+			<!-- Maven Compiler Plugin -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -150,6 +289,8 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
+
+			<!-- Spring Boot Maven Plugin（預設配置） -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -162,7 +303,16 @@
 					</excludes>
 				</configuration>
 			</plugin>
+
+			<!-- Maven War Plugin（預設配置） -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>${maven.war.plugin.version}</version>
+				<configuration>
+					<failOnMissingWebXml>false</failOnMissingWebXml>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
-
 </project>

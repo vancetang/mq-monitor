@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    # 開發環境直接配置DataSource，不使用JNDI
+    url: jdbc:db2://127.0.0.1:50000/eltw
+    username: vance
+    password: 1qaz2wsx
+    driver-class-name: com.ibm.db2.jcc.DB2Driver
+
+    # 連接池配置
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      validation-timeout: 5000
+      connection-test-query: SELECT 1 FROM SYSIBM.SYSDUMMY1
+
+    # 開發工具配置
+    devtools:
+      restart:
+        enabled: true
+      livereload:
+        enabled: true
+
+# 開發環境日誌配置
+logging:
+  level:
+    com.example.mqmonitor: DEBUG
+    com.ibm.mq: INFO
+    org.springframework.jdbc: DEBUG

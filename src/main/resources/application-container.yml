@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    # 使用容器提供的 JNDI DataSource（適用 Tomcat & IBM Liberty）
+    jndi-name: java:comp/env/jndi/eltwdb
+
