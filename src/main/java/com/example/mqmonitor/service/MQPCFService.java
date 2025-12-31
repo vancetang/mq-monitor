@@ -15,8 +15,10 @@ import com.ibm.mq.MQException;
 import com.ibm.mq.MQQueueManager;
 import com.ibm.mq.constants.CMQC;
 import com.ibm.mq.constants.CMQCFC;
-import com.ibm.mq.pcf.PCFMessage;
-import com.ibm.mq.pcf.PCFMessageAgent;
+import com.ibm.mq.headers.MQDataException;
+import com.ibm.mq.headers.pcf.PCFException;
+import com.ibm.mq.headers.pcf.PCFMessage;
+import com.ibm.mq.headers.pcf.PCFMessageAgent;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -60,6 +62,14 @@ public class MQPCFService {
                 String startTime = (String) response.getParameter(CMQCFC.MQCACF_Q_MGR_START_TIME).getValue();
                 status.put("startTime", StringUtils.replace(startTime, ".", ":"));
             }
+        } catch (MQDataException e) {
+            log.error("獲取 Queue Manager 狀態時發生錯誤: {}", e.getMessage(), e);
+            // 檢查是否為連線錯誤
+            if (e.getCause() instanceof MQException) {
+                mqConnectionService.checkConnectionError((MQException) e.getCause());
+            }
+            status.put("status", "錯誤: " + e.getMessage());
+            status.put("connected", false);
         } catch (MQException e) {
             log.error("獲取 Queue Manager 狀態時發生錯誤: {}", e.getMessage(), e);
             // 檢查是否為連線錯誤
@@ -74,7 +84,7 @@ public class MQPCFService {
             if (Objects.nonNull(agent)) {
                 try {
                     agent.disconnect();
-                } catch (MQException e) {
+                } catch (MQDataException e) {
                     log.error("關閉 PCF 代理時發生錯誤: {}", e.getMessage(), e);
                 }
             }
@@ -147,26 +157,30 @@ public class MQPCFService {
                         queueInfo.put("openOutputCount", openOutputCount);
                         queueInfo.put("status", "正常");
                     }
-                } catch (MQException e) {
+                } catch (MQDataException e) {
                     // 檢查是否為連線錯誤
-                    mqConnectionService.checkConnectionError(e);
+                    if (e.getCause() instanceof MQException) {
+                        mqConnectionService.checkConnectionError((MQException) e.getCause());
+                    }
                     queueInfo.put("status", "錯誤: " + e.getMessage());
                     queueInfo.put("depth", -1);
                 }
 
                 queuesStatus.add(queueInfo);
             }
-        } catch (MQException e) {
+        } catch (MQDataException e) {
             log.error("獲取隊列狀態時發生錯誤: {}", e.getMessage(), e);
             // 檢查是否為連線錯誤
-            mqConnectionService.checkConnectionError(e);
+            if (e.getCause() instanceof MQException) {
+                mqConnectionService.checkConnectionError((MQException) e.getCause());
+            }
         } catch (IOException e) {
             log.error("獲取隊列狀態時發生錯誤: {}", e.getMessage(), e);
         } finally {
             if (Objects.nonNull(agent)) {
                 try {
                     agent.disconnect();
-                } catch (MQException e) {
+                } catch (MQDataException e) {
                     log.error("關閉 PCF 代理時發生錯誤: {}", e.getMessage(), e);
                 }
             }
@@ -226,28 +240,45 @@ public class MQPCFService {
                         channelInfo.put("status", "非作用中");
                         channelInfo.put("active", false);
                     }
-                } catch (MQException e) {
+                } catch (MQDataException e) {
                     // 檢查是否為連線錯誤
-                    mqConnectionService.checkConnectionError(e);
+                    if (e.getCause() instanceof MQException) {
+                        mqConnectionService.checkConnectionError((MQException) e.getCause());
+                    }
                     // MQRCCF_CHL_STATUS_NOT_FOUND 3065
-                    boolean isStatusNotFound = Objects.equals(e.getReason(), CMQCFC.MQRCCF_CHL_STATUS_NOT_FOUND);
+                    // PCFException or MQDataException might have reason code directly or via getReason()
+                    // Assuming PCFException has getReason() or similar. 
+                    // Let's check e.getReason() if possible, but e is mixed type.
+                    // Both MQDataException and PCFException extend Exception, but usually have reason code access.
+                    // For now, simply log error as we can't easily access getReason() on mixed catch without casting.
+                    
+                    // Safe approach for 3065 check:
+                    boolean isStatusNotFound = false;
+                    if (e instanceof PCFException && ((PCFException)e).getReason() == CMQCFC.MQRCCF_CHL_STATUS_NOT_FOUND) {
+                         isStatusNotFound = true;
+                    } else if (e instanceof MQDataException && ((MQDataException)e).getReason() == CMQCFC.MQRCCF_CHL_STATUS_NOT_FOUND) {
+                         isStatusNotFound = true;
+                    }
+
                     channelInfo.put("status", isStatusNotFound ? "非作用中" : "錯誤: " + e.getMessage());
                     channelInfo.put("active", false);
                 }
 
                 channelsStatus.add(channelInfo);
             }
-        } catch (MQException e) {
+        } catch (MQDataException e) {
             log.error("獲取通道狀態時發生錯誤: {}", e.getMessage(), e);
             // 檢查是否為連線錯誤
-            mqConnectionService.checkConnectionError(e);
+            if (e.getCause() instanceof MQException) {
+                mqConnectionService.checkConnectionError((MQException) e.getCause());
+            }
         } catch (IOException e) {
             log.error("獲取通道狀態時發生錯誤: {}", e.getMessage(), e);
         } finally {
             if (Objects.nonNull(agent)) {
                 try {
                     agent.disconnect();
-                } catch (MQException e) {
+                } catch (MQDataException e) {
                     log.error("關閉 PCF 代理時發生錯誤: {}", e.getMessage(), e);
                 }
             }
