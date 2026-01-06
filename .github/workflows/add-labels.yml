@@ -32,7 +32,8 @@ jobs:
               {"name": "backend", "color": "2ecc71", "description": "Related to backend logic or infrastructure"},
               {"name": "configuration", "color": "3498db", "description": "Related to project settings or configuration files"},
               {"name": "build", "color": "e67e22", "description": "Related to build processes or tools"},
-              {"name": "test-code", "color": "9b59b6", "description": "Related to writing or fixing unit/integration test code"}              
+              {"name": "test-code", "color": "9b59b6", "description": "Related to writing or fixing unit/integration test code"},
+              {"name": "automated", "color": "607d8b", "description": "Automated changes (CI/CD, bots, etc.)"}
             ]
           EOF
           )
@@ -49,13 +50,13 @@ jobs:
                 echo ${LABEL} | base64 --decode | jq -r "${1}"
               fi
             }
-            
+
             LABEL_NAME=$(_jq '.name')
             LABEL_COLOR=$(_jq '.color')
             LABEL_DESCRIPTION=$(_jq '.description')
             # 將標籤名稱編碼為 URL 安全的格式
             LABEL_NAME=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$LABEL_NAME'))")
-            
+
             echo "🔍 Checking label - [${LABEL_NAME}][${LABEL_COLOR}][${LABEL_DESCRIPTION}]"
             # 檢查標籤是否存在
             response=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
