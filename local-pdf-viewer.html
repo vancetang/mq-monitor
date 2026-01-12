@@ -170,6 +170,14 @@
           display: none !important;
         }
       }
+
+      /* 視窗失去焦點時的模糊效果 */
+      .blurred {
+        filter: blur(20px);
+        -webkit-filter: blur(20px);
+        pointer-events: none; /* 防止在模糊狀態下被點擊 */
+        transition: filter 0.1s;
+      }
     </style>
   </head>
   <body>
@@ -424,6 +432,17 @@
           e.preventDefault();
           alert('本系統已禁用儲存功能。');
         }
+      });
+
+      // 視窗失去焦點時模糊化內容 (防截圖軟體)
+      window.addEventListener('blur', function () {
+        document.body.classList.add('blurred');
+        document.title = '內容保護中...';
+      });
+
+      window.addEventListener('focus', function () {
+        document.body.classList.remove('blurred');
+        document.title = '本地預覽PDF版';
       });
 
       // 初始化
