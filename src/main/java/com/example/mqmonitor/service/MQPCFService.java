@@ -69,7 +69,7 @@ public class MQPCFService {
                 status.put("startDate", startDate);
                 status.put("startTime", startTime != null ? startTime.replace(".", ":") : "");
             }
-        } catch (MQDataException | IOException e) {
+        } catch (MQDataException | IOException | MQException e) {
             handleError(e, "獲取 Queue Manager 狀態時發生錯誤");
             status.put("status", "錯誤: " + e.getMessage());
             status.put("connected", false);
@@ -181,7 +181,7 @@ public class MQPCFService {
     /**
      * 獲取指定隊列的即時深度及開啟計數狀態。
      *
-     * @param agent PCF 代理
+     * @param agent     PCF 代理
      * @param queueName 隊列名稱
      * @param queueInfo 用於存儲結果的 Map
      */
@@ -209,7 +209,7 @@ public class MQPCFService {
     /**
      * 獲取指定通道的即時運行狀態。
      *
-     * @param agent PCF 代理
+     * @param agent       PCF 代理
      * @param channelName 通道名稱
      * @param channelInfo 用於存儲結果的 Map
      */
@@ -266,7 +266,7 @@ public class MQPCFService {
     /**
      * 安全地從 PCF 訊息中獲取字串參數。
      *
-     * @param msg PCF 訊息
+     * @param msg     PCF 訊息
      * @param paramId 參數 ID
      * @return 參數值，若發生錯誤則回傳 null
      */
@@ -281,8 +281,8 @@ public class MQPCFService {
     /**
      * 安全地從 PCF 訊息中獲取整數參數。
      *
-     * @param msg PCF 訊息
-     * @param paramId 參數 ID
+     * @param msg          PCF 訊息
+     * @param paramId      參數 ID
      * @param defaultValue 預設值
      * @return 參數值或預設值
      */
@@ -299,7 +299,7 @@ public class MQPCFService {
      * 統一錯誤處理邏輯。
      * 記錄錯誤日誌並檢查是否為連線層級的錯誤。
      *
-     * @param e 發生的例外
+     * @param e      發生的例外
      * @param logMsg 錯誤日誌訊息 (若為 null 則不記錄)
      */
     private void handleError(Exception e, String logMsg) {
