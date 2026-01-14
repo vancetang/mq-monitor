@@ -166,9 +166,66 @@
       }
 
       @media print {
-        body {
+        /* 隱藏所有頁面內容 */
+        .toolbar,
+        #viewerContainer,
+        #loadingBar {
           display: none !important;
         }
+        
+        /* 顯示列印遮蔽層 */
+        #print-overlay {
+          display: flex !important;
+        }
+
+        /* 修正：列印時強制移除模糊濾鏡，避免遮蔽層也被模糊 */
+        body.blurred {
+          filter: none !important;
+          -webkit-filter: none !important;
+        }
+      }
+
+      /* 列印遮蔽層樣式 */
+      #print-overlay {
+        display: none; /* 平時隱藏 */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: white;
+        z-index: 9999;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .print-warning .icon {
+        font-size: 80px;
+        margin-bottom: 20px;
+      }
+
+      .print-warning h1 {
+        color: #d32f2f; /* 紅色警告 */
+        font-size: 32px;
+        margin: 0;
+        font-weight: bold;
+      }
+
+      .print-warning p {
+        color: #555;
+        font-size: 18px;
+        margin-top: 10px;
+      }
+
+      /* 視窗失去焦點時的模糊效果 */
+      .blurred {
+        /* 使用高斯模糊 + 降低亮度 (模擬深色毛玻璃效果，避免刺眼) */
+        filter: blur(20px) brightness(0.6);
+        -webkit-filter: blur(20px) brightness(0.6);
+        pointer-events: none; /* 防止在模糊狀態下被點擊 */
+        transition: filter 0.3s ease; /* 增加過渡時間讓效果更柔和 */
       }
     </style>
   </head>
@@ -210,6 +267,15 @@
 
     <div id="viewerContainer">
       <div id="viewer" class="pdfViewer"></div>
+    </div>
+
+    <!-- 列印遮蔽層 (預設隱藏，僅列印時顯示) -->
+    <div id="print-overlay">
+      <div class="print-warning">
+        <div class="icon">🚫</div>
+        <h1>機密文件 禁止列印</h1>
+        <p>Confidential - Printing Prohibited</p>
+      </div>
     </div>
 
     <!-- PDF.js 官方 JS -->
@@ -424,6 +490,17 @@
           e.preventDefault();
           alert('本系統已禁用儲存功能。');
         }
+      });
+
+      // 視窗失去焦點時模糊化內容 (防截圖軟體)
+      window.addEventListener('blur', function () {
+        document.body.classList.add('blurred');
+        document.title = '內容保護中...';
+      });
+
+      window.addEventListener('focus', function () {
+        document.body.classList.remove('blurred');
+        document.title = '本地預覽PDF版';
       });
 
       // 初始化
