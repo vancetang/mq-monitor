@@ -413,361 +413,356 @@
 
     <!-- PDF.js 官方 JS (使用 CDN 與 ESM) -->
     <script type="module">
-      import * as pdfjsLib from './pdfjs-assets-v5.4.530/pdf.mjs';
-      import * as pdfjsViewer from './pdfjs-assets-v5.4.530/pdf_viewer.mjs';
+      import {
+        getDocument,
+        GlobalWorkerOptions,
+        PasswordResponses,
+      } from './pdfjs-assets-v5.4.530/pdf.mjs';
+      import {
+        PDFViewer,
+        EventBus,
+        PDFLinkService,
+        PDFFindController,
+      } from './pdfjs-assets-v5.4.530/pdf_viewer.mjs';
 
       // 設定 PDF.js 的 worker 路徑
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-        './pdfjs-assets-v5.4.530/pdf.worker.mjs';
+      GlobalWorkerOptions.workerSrc = './pdfjs-assets-v5.4.530/pdf.worker.mjs';
 
-      // 變數定義
-      let pdfDoc = null;
-      let pageNum = 1;
-      let scale = 1.0;
-      let pdfViewer = null;
-      let pdfLinkService = null;
-      let currentPdfData = null; // 儲存當前 PDF 資料
+      class PDFViewerApp {
+        constructor() {
+          this.pdfDoc = null;
+          this.pageNum = 1;
+          this.scale = 1.0;
+          this.pdfViewer = null;
+          this.pdfLinkService = null;
+          this.eventBus = null;
+          this.currentPasswordCallback = null;
 
-      // DOM 元素
-      const container = document.getElementById('viewerContainer');
-      const pageNumberInput = document.getElementById('pageNumber');
-      const numPages = document.getElementById('numPages');
-      const previousButton = document.getElementById('previous');
-      const nextButton = document.getElementById('next');
-      const zoomInButton = document.getElementById('zoomIn');
-      const zoomOutButton = document.getElementById('zoomOut');
-      const zoomValueSpan = document.getElementById('zoomValue');
-      const printButton = document.getElementById('print');
-      const downloadButton = document.getElementById('download');
-      const loadingBar = document.getElementById('loadingBar');
-      const loadingBarProgress = loadingBar.querySelector('.progress');
-      const fileInput = document.getElementById('fileInput');
+          // DOM 元素快取
+          this.ui = {
+            container: document.getElementById('viewerContainer'),
+            pageNumberInput: document.getElementById('pageNumber'),
+            numPages: document.getElementById('numPages'),
+            previousButton: document.getElementById('previous'),
+            nextButton: document.getElementById('next'),
+            zoomInButton: document.getElementById('zoomIn'),
+            zoomOutButton: document.getElementById('zoomOut'),
+            zoomValueSpan: document.getElementById('zoomValue'),
+            printButton: document.getElementById('print'),
+            downloadButton: document.getElementById('download'),
+            loadingBar: document.getElementById('loadingBar'),
+            loadingBarProgress: document.querySelector('#loadingBar .progress'),
+            fileInput: document.getElementById('fileInput'),
+            passwordModal: document.getElementById('passwordModal'),
+            modalPasswordInput: document.getElementById('modalPasswordInput'),
+            modalConfirmBtn: document.getElementById('modalConfirmBtn'),
+            modalCancelBtn: document.getElementById('modalCancelBtn'),
+            passwordPromptMsg: document.getElementById('passwordPromptMsg'),
+            togglePassword: document.getElementById('togglePassword'),
+          };
 
-      // 密碼 Modal 元素
-      const passwordModal = document.getElementById('passwordModal');
-      const modalPasswordInput = document.getElementById('modalPasswordInput');
-      const modalConfirmBtn = document.getElementById('modalConfirmBtn');
-      const modalCancelBtn = document.getElementById('modalCancelBtn');
-      const passwordPromptMsg = document.getElementById('passwordPromptMsg');
-      const togglePassword = document.getElementById('togglePassword');
-
-      let currentPasswordCallback = null; // 暫存密碼回調函式
-      // 事件匯流排，可以全域共用
-      let eventBus = null;
-
-      // 初始化 PDF 基礎元件 (只執行一次)
-      function initApp() {
-        eventBus = new pdfjsViewer.EventBus();
-        // 監聽事件
-        eventBus.on('pagechanging', function (evt) {
-          pageNum = evt.pageNumber;
-          updateUI();
-        });
-
-        eventBus.on('scalechanging', function (evt) {
-          scale = evt.scale;
-          updateZoomValue();
-        });
-
-        eventBus.on('progress', function (evt) {
-          if (evt.total > 0) {
-            const percent = Math.round((evt.loaded / evt.total) * 100);
-            loadingBarProgress.style.width = percent + '%';
-          }
-        });
-
-        eventBus.on('documentloaded', function () {
-          loadingBar.style.display = 'none';
-        });
-      }
-
-      // 建立並設定 Viewer (每次載入新檔時呼叫)
-      function createPdfViewer() {
-        // 清空容器
-        container.textContent = '';
-        const viewerDiv = document.createElement('div');
-        viewerDiv.id = 'viewer';
-        viewerDiv.className = 'pdfViewer';
-        container.appendChild(viewerDiv);
-
-        // 重建 LinkService 和 FindController
-        pdfLinkService = new pdfjsViewer.PDFLinkService({
-          eventBus: eventBus,
-        });
-
-        const findController = new pdfjsViewer.PDFFindController({
-          eventBus: eventBus,
-          linkService: pdfLinkService,
-        });
-
-        pdfViewer = new pdfjsViewer.PDFViewer({
-          container: container,
-          eventBus: eventBus,
-          linkService: pdfLinkService,
-          findController: findController,
-          renderer: 'canvas',
-          textLayerMode: 2,
-        });
-
-        pdfLinkService.setViewer(pdfViewer);
-      }
-
-      /**
-       * 載入 PDF
-       * @param {string|Uint8Array} source - 檔案路徑 URL 或 ArrayBuffer 資料
-       */
-      function loadPdf(source) {
-        loadingBar.style.display = 'block';
-        loadingBarProgress.style.width = '0%';
-
-        // 儲存來源以便 (未來可能的) 使用
-        if (typeof source !== 'string') {
-          currentPdfData = source;
-        } else {
-          currentPdfData = null;
+          this.init();
         }
 
-        // 準備載入參數，包含密碼處理
-        const params = {};
-        if (typeof source === 'string') {
-          params.url = source;
-        } else {
-          params.data = source;
+        init() {
+          this.initEventBus();
+          this.createPdfViewer();
+          this.bindEvents();
+          this.setupSecurity();
         }
 
-        const loadingTask = pdfjsLib.getDocument(params);
+        initEventBus() {
+          this.eventBus = new EventBus();
 
-        loadingTask.onPassword = function (updatePassword, reason) {
-          console.log('需要密碼，原因代碼:', reason);
+          // 監聽頁面變更
+          this.eventBus.on('pagechanging', (evt) => {
+            this.pageNum = evt.pageNumber;
+            this.updateUI();
+          });
 
-          // 儲存回調以便 Modal 使用
-          currentPasswordCallback = updatePassword;
-          let msg = '請輸入密碼以開啟此文件：';
+          // 監聽縮放變更
+          this.eventBus.on('scalechanging', (evt) => {
+            this.scale = evt.scale;
+            this.updateZoomValue();
+          });
 
-          // 嘗試取得錯誤代碼常數，若無法取得則預設為 1 (通常是密碼錯誤)
-          const PASSWORD_INCORRECT =
-            (pdfjsLib.PasswordResponses &&
-              pdfjsLib.PasswordResponses.INCORRECT_PASSWORD) ||
-            1;
-          if (reason === PASSWORD_INCORRECT) {
-            msg = '密碼錯誤，請重新輸入：';
-            modalPasswordInput.value = ''; // 錯誤時清空
-            modalPasswordInput.classList.add('error');
-            passwordPromptMsg.classList.add('error-text');
-          } else {
-            modalPasswordInput.value = ''; // 首次輸入清空
-            modalPasswordInput.classList.remove('error');
-            passwordPromptMsg.classList.remove('error-text');
-          }
-          passwordPromptMsg.textContent = msg;
-          passwordModal.style.display = 'flex';
-          modalPasswordInput.focus();
-        };
-
-        loadingTask.promise
-          .then(function (pdf) {
-            // 在設定新文件前，銷毀舊的 pdfDoc (如果有的話)
-            if (pdfDoc) {
-              pdfDoc.destroy();
-              pdfDoc = null;
+          // 監聽載入進度
+          this.eventBus.on('progress', (evt) => {
+            if (evt.total > 0) {
+              const percent = Math.round((evt.loaded / evt.total) * 100);
+              this.ui.loadingBarProgress.style.width = percent + '%';
             }
-            // 重建 Viewer 環境
-            createPdfViewer();
-            pdfDoc = pdf;
-            numPages.textContent = pdf.numPages;
-            pdfViewer.setDocument(pdf);
-            pdfLinkService.setDocument(pdf);
+          });
 
-            // 重置縮放
-            scale = 1.0;
-            pdfViewer.currentScaleValue = 'auto';
+          // 監聽文件載入完成
+          this.eventBus.on('documentloaded', () => {
+            this.ui.loadingBar.style.display = 'none';
+          });
+          
+          // 頁面初始化完成後，自動調整縮放
+          this.eventBus.on('pagesinit', () => {
+            this.pdfViewer.currentScaleValue = 'auto';
+          });
+        }
 
-            updateUI();
-            // 成功載入後隱藏 Modal
-            passwordModal.style.display = 'none';
-            currentPasswordCallback = null;
+        createPdfViewer() {
+          this.ui.container.textContent = '';
+          const viewerDiv = document.createElement('div');
+          viewerDiv.id = 'viewer';
+          viewerDiv.className = 'pdfViewer';
+          this.ui.container.appendChild(viewerDiv);
+
+          this.pdfLinkService = new PDFLinkService({
+            eventBus: this.eventBus,
+          });
+
+          const findController = new PDFFindController({
+            eventBus: this.eventBus,
+            linkService: this.pdfLinkService,
+          });
+
+          this.pdfViewer = new PDFViewer({
+            container: this.ui.container,
+            eventBus: this.eventBus,
+            linkService: this.pdfLinkService,
+            findController: findController,
+            renderer: 'canvas',
+            textLayerMode: 2,
+          });
+
+          this.pdfLinkService.setViewer(this.pdfViewer);
+        }
+
+        async loadPdf(source) {
+          this.ui.loadingBar.style.display = 'block';
+          this.ui.loadingBarProgress.style.width = '0%';
+
+          const params =
+            typeof source === 'string' ? { url: source } : { data: source };
+
+          // 建立 Loading Task
+          const loadingTask = getDocument(params);
+
+          // 設定密碼回調
+          loadingTask.onPassword = (updatePassword, reason) => {
+            this.handlePasswordRequest(updatePassword, reason);
+          };
+
+          try {
+            const pdf = await loadingTask.promise;
+
+            // 銷毀舊文件
+            if (this.pdfDoc) {
+              this.pdfDoc.destroy();
+            }
+
+            // 重建 Viewer (確保狀態乾淨)
+            this.createPdfViewer();
+
+            this.pdfDoc = pdf;
+            this.ui.numPages.textContent = pdf.numPages;
+            this.pdfViewer.setDocument(pdf);
+            this.pdfLinkService.setDocument(pdf);
+
+            // 重置狀態
+            this.pageNum = 1;
+            this.scale = 1.0;
+            
+            this.updateUI();
+            this.hidePasswordModal();
             console.log('PDF 載入成功');
-          })
-          .catch(function (error) {
-            console.error('載入 PDF 失敗:', error);
 
-            // 失敗也要隱藏 Modal
-            passwordModal.style.display = 'none';
-            currentPasswordCallback = null;
+          } catch (error) {
+            console.error('載入 PDF 失敗:', error);
+            this.hidePasswordModal();
+            
             let msg = '載入失敗: ' + error.message;
-            if (
-              typeof source === 'string' &&
-              window.location.protocol === 'file:'
-            ) {
-              msg +=
-                '\n\n注意：由於瀏覽器安全性限制 (CORS)，直接開啟 HTML 檔案時通常無法讀取同目錄的其他檔案。\n請使用左上角的「開啟 PDF」按鈕選取檔案。';
+            if (typeof source === 'string' && window.location.protocol === 'file:') {
+               msg += '\n\n錯誤：請使用 HTTP Server 執行此 v5 版本 (ESM)，或改用支援 file:// 的 v3 版本。';
             }
             alert(msg);
-            loadingBar.style.display = 'none';
+            this.ui.loadingBar.style.display = 'none';
+          }
+        }
+
+        handlePasswordRequest(updatePassword, reason) {
+          console.log('需要密碼，原因代碼:', reason);
+          this.currentPasswordCallback = updatePassword;
+          
+          let msg = '請輸入密碼以開啟此文件：';
+          const PASSWORD_INCORRECT = PasswordResponses?.INCORRECT_PASSWORD || 1;
+
+          if (reason === PASSWORD_INCORRECT) {
+            msg = '密碼錯誤，請重新輸入：';
+            this.ui.modalPasswordInput.value = '';
+            this.ui.modalPasswordInput.classList.add('error');
+            this.ui.passwordPromptMsg.classList.add('error-text');
+          } else {
+            this.ui.modalPasswordInput.value = '';
+            this.ui.modalPasswordInput.classList.remove('error');
+            this.ui.passwordPromptMsg.classList.remove('error-text');
+          }
+
+          this.ui.passwordPromptMsg.textContent = msg;
+          this.ui.passwordModal.style.display = 'flex';
+          this.ui.modalPasswordInput.focus();
+        }
+
+        submitPassword() {
+          const password = this.ui.modalPasswordInput.value;
+          if (this.currentPasswordCallback) {
+            this.ui.passwordModal.style.display = 'none';
+            this.currentPasswordCallback(password);
+          }
+        }
+
+        cancelPassword() {
+          if (this.currentPasswordCallback) {
+            console.log('使用者取消輸入密碼');
+            this.currentPasswordCallback('');
+          }
+          this.hidePasswordModal();
+          this.ui.loadingBar.style.display = 'none';
+        }
+
+        hidePasswordModal() {
+          this.ui.passwordModal.style.display = 'none';
+          this.currentPasswordCallback = null;
+        }
+
+        updateUI() {
+          this.ui.pageNumberInput.value = this.pageNum;
+          this.ui.previousButton.disabled = this.pageNum <= 1;
+          this.ui.nextButton.disabled =
+            !this.pdfDoc || this.pageNum >= this.pdfDoc.numPages;
+        }
+
+        updateZoomValue() {
+          this.ui.zoomValueSpan.textContent = Math.round(this.scale * 100) + '%';
+        }
+
+        bindEvents() {
+          // 翻頁控制
+          this.ui.previousButton.addEventListener('click', () => {
+            if (this.pageNum > 1) {
+              this.pageNum--;
+              this.pdfViewer.currentPageNumber = this.pageNum;
+            }
           });
-      }
 
-      // Modal 事件處理
-      function submitPassword() {
-        const password = modalPasswordInput.value;
-        if (currentPasswordCallback) {
-          // 隱藏 Modal 交給 PDF.js 處理驗證 (如果錯誤 onPassword 會再次被呼叫)
-          passwordModal.style.display = 'none';
-          currentPasswordCallback(password);
+          this.ui.nextButton.addEventListener('click', () => {
+            if (this.pdfDoc && this.pageNum < this.pdfDoc.numPages) {
+              this.pageNum++;
+              this.pdfViewer.currentPageNumber = this.pageNum;
+            }
+          });
+
+          this.ui.pageNumberInput.addEventListener('change', (e) => {
+            const val = parseInt(e.target.value);
+            if (this.pdfDoc && val >= 1 && val <= this.pdfDoc.numPages) {
+              this.pageNum = val;
+              this.pdfViewer.currentPageNumber = this.pageNum;
+            } else {
+              e.target.value = this.pageNum;
+            }
+          });
+
+          // 縮放控制
+          this.ui.zoomInButton.addEventListener('click', () => {
+            this.scale = Math.min(5, this.scale * 1.1);
+            this.pdfViewer.currentScale = this.scale;
+          });
+
+          this.ui.zoomOutButton.addEventListener('click', () => {
+            this.scale = Math.max(0.1, this.scale / 1.1);
+            this.pdfViewer.currentScale = this.scale;
+          });
+
+          // 檔案上傳
+          this.ui.fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+              const fileReader = new FileReader();
+              fileReader.onload = () => {
+                this.loadPdf(new Uint8Array(fileReader.result));
+              };
+              fileReader.readAsArrayBuffer(file);
+            }
+          });
+
+          // 列印與下載 (禁用)
+          const alertDisabled = (msg) => alert(msg);
+          this.ui.printButton.addEventListener('click', () =>
+            alertDisabled('本系統已禁用列印功能。')
+          );
+          this.ui.downloadButton.addEventListener('click', () =>
+            alertDisabled('本系統已禁用下載功能。')
+          );
+
+          // 密碼 Modal 事件
+          this.ui.modalConfirmBtn.addEventListener('click', () =>
+            this.submitPassword()
+          );
+          this.ui.modalCancelBtn.addEventListener('click', () =>
+            this.cancelPassword()
+          );
+          this.ui.modalPasswordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') this.submitPassword();
+            else if (e.key === 'Escape') this.cancelPassword();
+          });
+
+          // 密碼顯示切換
+          const showPass = () => (this.ui.modalPasswordInput.type = 'text');
+          const hidePass = () => (this.ui.modalPasswordInput.type = 'password');
+
+          this.ui.togglePassword.addEventListener('mousedown', showPass);
+          this.ui.togglePassword.addEventListener('mouseup', hidePass);
+          this.ui.togglePassword.addEventListener('mouseleave', hidePass);
+          
+          this.ui.togglePassword.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            showPass();
+          });
+          this.ui.togglePassword.addEventListener('touchend', (e) => {
+             e.preventDefault();
+             hidePass();
+          });
+        }
+
+        setupSecurity() {
+          // 禁用右鍵
+          document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+          // 禁用快捷鍵
+          document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+              e.preventDefault();
+              alert('本系統已禁用列印功能。');
+            }
+            if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+              e.preventDefault();
+              alert('本系統已禁用儲存功能。');
+            }
+          });
+
+          // 模糊效果
+          window.addEventListener('blur', () => {
+            document.body.classList.add('blurred');
+            document.title = '內容保護中...';
+          });
+
+          window.addEventListener('focus', () => {
+            document.body.classList.remove('blurred');
+            document.title = '本地預覽PDF版';
+          });
         }
       }
 
-      function cancelPassword() {
-        if (currentPasswordCallback) {
-          // 傳入空字串或取消
-          console.log('使用者取消輸入密碼');
-          currentPasswordCallback('');
-        }
-        passwordModal.style.display = 'none';
-        loadingBar.style.display = 'none';
-      }
-
-      modalConfirmBtn.addEventListener('click', submitPassword);
-      modalCancelBtn.addEventListener('click', cancelPassword);
-
-      // 密碼顯示/隱藏切換
-      function showPassword() {
-        modalPasswordInput.type = 'text';
-      }
-
-      function hidePassword() {
-        modalPasswordInput.type = 'password';
-      }
-
-      togglePassword.addEventListener('mousedown', showPassword);
-      togglePassword.addEventListener('mouseup', hidePassword);
-      togglePassword.addEventListener('mouseleave', hidePassword);
-
-      // 行動裝置支援
-      togglePassword.addEventListener('touchstart', function (e) {
-        e.preventDefault();
-        showPassword();
-      });
-      togglePassword.addEventListener('touchend', function (e) {
-        e.preventDefault();
-        hidePassword();
-      });
-
-      // 支援 Enter 鍵提交
-      modalPasswordInput.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') {
-          submitPassword();
-        } else if (e.key === 'Escape') {
-          cancelPassword();
-        }
-      });
-
-      function updateUI() {
-        pageNumberInput.value = pageNum;
-        previousButton.disabled = pageNum <= 1;
-        nextButton.disabled = pageNum >= pdfDoc.numPages;
-      }
-
-      function updateZoomValue() {
-        zoomValueSpan.textContent = Math.round(scale * 100) + '%';
-      }
-
-      // 按鈕事件處理
-      function onPrevPage() {
-        if (pageNum > 1) {
-          pageNum--;
-          pdfViewer.currentPageNumber = pageNum;
-        }
-      }
-
-      function onNextPage() {
-        if (pageNum < pdfDoc.numPages) {
-          pageNum++;
-          pdfViewer.currentPageNumber = pageNum;
-        }
-      }
-
-      function onZoomIn() {
-        scale = Math.min(5, scale * 1.1);
-        pdfViewer.currentScale = scale;
-      }
-
-      function onZoomOut() {
-        scale = Math.max(0.1, scale / 1.1);
-        pdfViewer.currentScale = scale;
-      }
-
-      function onPrint() {
-        alert('本系統已禁用列印功能。');
-      }
-
-      function onDownload() {
-        alert('本系統已禁用下載功能。');
-      }
-
-      // 監聽檔案選取
-      fileInput.addEventListener('change', function (e) {
-        const file = e.target.files[0];
-        if (file) {
-          const fileReader = new FileReader();
-          fileReader.onload = function () {
-            const typedarray = new Uint8Array(this.result);
-            loadPdf(typedarray);
-          };
-          fileReader.readAsArrayBuffer(file);
-        }
-      });
-
-      // 綁定按鈕事件
-      previousButton.addEventListener('click', onPrevPage);
-      nextButton.addEventListener('click', onNextPage);
-      zoomInButton.addEventListener('click', onZoomIn);
-      zoomOutButton.addEventListener('click', onZoomOut);
-      printButton.addEventListener('click', onPrint);
-      downloadButton.addEventListener('click', onDownload);
-
-      pageNumberInput.addEventListener('change', function () {
-        const val = parseInt(this.value);
-        if (val >= 1 && val <= pdfDoc.numPages) {
-          pageNum = val;
-          pdfViewer.currentPageNumber = pageNum;
-        } else {
-          this.value = pageNum;
-        }
-      });
-
-      // 禁用右鍵選單
-      document.addEventListener('contextmenu', (e) => e.preventDefault());
-
-      // 禁用鍵盤快捷鍵 (Ctrl+P, Ctrl+S)
-      document.addEventListener('keydown', function (e) {
-        if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
-          e.preventDefault();
-          alert('本系統已禁用列印功能。');
-        }
-        if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
-          e.preventDefault();
-          alert('本系統已禁用儲存功能。');
-        }
-      });
-
-      // 視窗失去焦點時模糊化內容 (防截圖軟體)
-      window.addEventListener('blur', function () {
-        document.body.classList.add('blurred');
-        document.title = '內容保護中...';
-      });
-
-      window.addEventListener('focus', function () {
-        document.body.classList.remove('blurred');
-        document.title = '本地預覽PDF版';
-      });
-
-      // 初始化
-      initApp();
-      createPdfViewer();
-
-      // 嘗試自動載入同目錄下的 report.pdf
-      //loadPdf('report.pdf');
+      // 啟動應用程式
+      const app = new PDFViewerApp();
+      
+      // 開放給全域以便除錯 (可選)
+      window.pdfApp = app;
     </script>
   </body>
 </html>
