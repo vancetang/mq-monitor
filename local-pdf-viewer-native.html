@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>本地預覽PDF版</title>
+
+    <!-- PDF.js 官方 CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/web/pdf_viewer.css"
+    />
+
+    <!-- 自定義樣式 -->
+    <style>
+      :root {
+        --main-color: #0078d7;
+        --button-hover-color: #005a9e;
+        --button-active-color: #004275;
+      }
+
+      html,
+      body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+      }
+
+      #viewerContainer {
+        position: absolute;
+        top: 40px; /* 增加高度給工具列 */
+        bottom: 0;
+        left: 0;
+        right: 0;
+        overflow: auto;
+        background-color: #525659;
+      }
+
+      #viewer {
+        position: relative;
+      }
+
+      .toolbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        background-color: #474747;
+        color: white;
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+        z-index: 1000;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      }
+
+      .toolbar-left,
+      .toolbar-center,
+      .toolbar-right {
+        display: flex;
+        align-items: center;
+      }
+
+      .toolbar-left {
+        flex: 1.5; /* 增加空間給檔案上傳按鈕 */
+      }
+
+      .toolbar-center {
+        flex: 1;
+        justify-content: center;
+      }
+
+      .toolbar-right {
+        flex: 1;
+        justify-content: flex-end;
+      }
+
+      .toolbar button,
+      .toolbar label.btn {
+        background-color: transparent;
+        border: none;
+        color: white;
+        padding: 6px 10px;
+        margin: 0 2px;
+        cursor: pointer;
+        border-radius: 2px;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .toolbar label.btn {
+        background-color: var(--main-color);
+        margin-right: 15px;
+      }
+
+      .toolbar button:hover,
+      .toolbar label.btn:hover {
+        background-color: var(--button-hover-color);
+      }
+
+      .toolbar button:active,
+      .toolbar label.btn:active {
+        background-color: var(--button-active-color);
+      }
+
+      /* 隱藏原生檔案輸入框 */
+      #fileInput {
+        display: none;
+      }
+
+      .page-controls {
+        display: flex;
+        align-items: center;
+      }
+
+      #pageNumber {
+        width: 40px;
+        text-align: center;
+        background-color: #333;
+        color: white;
+        border: 1px solid #555;
+        border-radius: 2px;
+        padding: 3px;
+        margin: 0 5px;
+      }
+
+      .zoom-controls {
+        display: flex;
+        align-items: center;
+        margin: 0 10px;
+      }
+
+      #zoomValue {
+        margin: 0 5px;
+        min-width: 45px;
+        text-align: center;
+      }
+
+      #loadingBar {
+        position: absolute;
+        top: 40px;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background-color: rgba(0, 0, 0, 0.3);
+        z-index: 1001;
+        display: none;
+      }
+
+      #loadingBar .progress {
+        width: 0%;
+        height: 100%;
+        background-color: var(--main-color);
+        transition: width 0.2s;
+      }
+
+      #viewerContainer {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+
+      @media print {
+        /* 隱藏所有頁面內容 */
+        .toolbar,
+        #viewerContainer,
+        #loadingBar {
+          display: none !important;
+        }
+
+        /* 顯示列印遮蔽層 */
+        #print-overlay {
+          display: flex !important;
+        }
+
+        /* 修正：列印時強制移除模糊濾鏡，避免遮蔽層也被模糊 */
+        body.blurred {
+          filter: none !important;
+          -webkit-filter: none !important;
+        }
+      }
+
+      /* 列印遮蔽層樣式 */
+      #print-overlay {
+        display: none; /* 平時隱藏 */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: white;
+        z-index: 9999;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .print-warning .icon {
+        font-size: 80px;
+        margin-bottom: 20px;
+      }
+
+      .print-warning h1 {
+        color: #d32f2f; /* 紅色警告 */
+        font-size: 32px;
+        margin: 0;
+        font-weight: bold;
+      }
+
+      .print-warning p {
+        color: #555;
+        font-size: 18px;
+        margin-top: 10px;
+      }
+
+      /* 視窗失去焦點時的模糊效果 */
+      .blurred {
+        /* 使用高斯模糊 + 降低亮度 (模擬深色毛玻璃效果，避免刺眼) */
+        filter: blur(20px) brightness(0.6);
+        -webkit-filter: blur(20px) brightness(0.6);
+        pointer-events: none; /* 防止在模糊狀態下被點擊 */
+        transition: filter 0.3s ease; /* 增加過渡時間讓效果更柔和 */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <!-- 新增：檔案選取按鈕 -->
+        <label for="fileInput" class="btn" title="開啟本地 PDF 檔案">
+          <span>📂 開啟 PDF</span>
+        </label>
+        <input type="file" id="fileInput" accept=".pdf" />
+
+        <div class="page-controls">
+          <button id="previous" title="上一頁">◀</button>
+          <input type="number" id="pageNumber" min="1" value="1" />
+          <span>/</span>
+          <span id="numPages">0</span>
+          <button id="next" title="下一頁">▶</button>
+        </div>
+      </div>
+
+      <div class="toolbar-center">
+        <div class="zoom-controls">
+          <button id="zoomOut" title="縮小">－</button>
+          <span id="zoomValue">100%</span>
+          <button id="zoomIn" title="放大">＋</button>
+        </div>
+      </div>
+
+      <div class="toolbar-right">
+        <button id="print" title="列印">列印</button>
+        <button id="download" title="下載">下載</button>
+      </div>
+    </div>
+
+    <div id="loadingBar">
+      <div class="progress"></div>
+    </div>
+
+    <div id="viewerContainer">
+      <div id="viewer" class="pdfViewer"></div>
+    </div>
+
+    <!-- 列印遮蔽層 (預設隱藏，僅列印時顯示) -->
+    <div id="print-overlay">
+      <div class="print-warning">
+        <div class="icon">🚫</div>
+        <h1>機密文件 禁止列印</h1>
+        <p>Confidential - Printing Prohibited</p>
+      </div>
+    </div>
+
+    <!-- PDF.js 官方 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/web/pdf_viewer.js"></script>
+
+    <script>
+      // 設定 PDF.js 的 worker 路徑
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+
+      // 變數定義
+      let pdfDoc = null;
+      let pageNum = 1;
+      let scale = 1.0;
+      let pdfViewer = null;
+      let pdfLinkService = null;
+      let currentPdfData = null; // 儲存當前 PDF 資料
+
+      // DOM 元素
+      const container = document.getElementById('viewerContainer');
+      const pageNumberInput = document.getElementById('pageNumber');
+      const numPages = document.getElementById('numPages');
+      const previousButton = document.getElementById('previous');
+      const nextButton = document.getElementById('next');
+      const zoomInButton = document.getElementById('zoomIn');
+      const zoomOutButton = document.getElementById('zoomOut');
+      const zoomValueSpan = document.getElementById('zoomValue');
+      const printButton = document.getElementById('print');
+      const downloadButton = document.getElementById('download');
+      const loadingBar = document.getElementById('loadingBar');
+      const loadingBarProgress = loadingBar.querySelector('.progress');
+      const fileInput = document.getElementById('fileInput');
+
+      // 事件匯流排，可以全域共用
+      let eventBus = null;
+
+      // 初始化 PDF 基礎元件 (只執行一次)
+      function initApp() {
+        eventBus = new pdfjsViewer.EventBus();
+        // 監聽事件
+        eventBus.on('pagechanging', function (evt) {
+          pageNum = evt.pageNumber;
+          updateUI();
+        });
+
+        eventBus.on('scalechanging', function (evt) {
+          scale = evt.scale;
+          updateZoomValue();
+        });
+
+        eventBus.on('progress', function (evt) {
+          if (evt.total > 0) {
+            const percent = Math.round((evt.loaded / evt.total) * 100);
+            loadingBarProgress.style.width = percent + '%';
+          }
+        });
+
+        eventBus.on('documentloaded', function () {
+          loadingBar.style.display = 'none';
+        });
+      }
+
+      // 建立並設定 Viewer (每次載入新檔時呼叫)
+      function createPdfViewer() {
+        // 清空容器
+        container.textContent = '';
+        const viewerDiv = document.createElement('div');
+        viewerDiv.id = 'viewer';
+        viewerDiv.className = 'pdfViewer';
+        container.appendChild(viewerDiv);
+
+        // 重建 LinkService 和 FindController
+        pdfLinkService = new pdfjsViewer.PDFLinkService({
+          eventBus: eventBus,
+        });
+
+        const findController = new pdfjsViewer.PDFFindController({
+          eventBus: eventBus,
+          linkService: pdfLinkService,
+        });
+
+        pdfViewer = new pdfjsViewer.PDFViewer({
+          container: container,
+          eventBus: eventBus,
+          linkService: pdfLinkService,
+          findController: findController,
+          renderer: 'canvas',
+          textLayerMode: 2,
+        });
+
+        pdfLinkService.setViewer(pdfViewer);
+      }
+
+      /**
+       * 載入 PDF
+       * @param {string|Uint8Array} source - 檔案路徑 URL 或 ArrayBuffer 資料
+       */
+      function loadPdf(source) {
+        loadingBar.style.display = 'block';
+        loadingBarProgress.style.width = '0%';
+
+        // 儲存來源以便 (未來可能的) 使用
+        if (typeof source !== 'string') {
+          currentPdfData = source;
+        } else {
+          currentPdfData = null;
+        }
+
+        // 準備載入參數，包含密碼處理
+        const params = {};
+        if (typeof source === 'string') {
+          params.url = source;
+        } else {
+          params.data = source;
+        }
+
+        const loadingTask = pdfjsLib.getDocument(params);
+
+        loadingTask.onPassword = function (updatePassword, reason) {
+          console.log('需要密碼，原因代碼:', reason);
+
+          let promptMsg = '此文件受密碼保護，請輸入密碼：';
+
+          // 嘗試取得錯誤代碼常數，若無法取得則預設為 1 (通常是密碼錯誤)
+          const PASSWORD_INCORRECT =
+            (pdfjsLib.PasswordResponses &&
+              pdfjsLib.PasswordResponses.INCORRECT_PASSWORD) ||
+            1;
+
+          if (reason === PASSWORD_INCORRECT) {
+            promptMsg = '密碼錯誤，請重新輸入：';
+          }
+
+          const password = prompt(promptMsg);
+          if (password) {
+            updatePassword(password);
+          } else {
+            // 使用者取消輸入，傳入空字串會導致驗證失敗並結束
+            console.log('使用者取消輸入密碼');
+            updatePassword('');
+            loadingBar.style.display = 'none';
+          }
+        };
+
+        loadingTask.promise
+          .then(function (pdf) {
+            // 在設定新文件前，銷毀舊的 pdfDoc (如果有的話)
+            if (pdfDoc) {
+              pdfDoc.destroy();
+              pdfDoc = null;
+            }
+            // 重建 Viewer 環境
+            createPdfViewer();
+            pdfDoc = pdf;
+            numPages.textContent = pdf.numPages;
+            pdfViewer.setDocument(pdf);
+            pdfLinkService.setDocument(pdf);
+
+            // 重置縮放
+            scale = 1.0;
+            pdfViewer.currentScaleValue = 'auto';
+
+            updateUI();
+            console.log('PDF 載入成功');
+          })
+          .catch(function (error) {
+            console.error('載入 PDF 失敗:', error);
+
+            let msg = '載入失敗: ' + error.message;
+            if (
+              typeof source === 'string' &&
+              window.location.protocol === 'file:'
+            ) {
+              msg +=
+                '\n\n注意：由於瀏覽器安全性限制 (CORS)，直接開啟 HTML 檔案時通常無法讀取同目錄的其他檔案。\n請使用左上角的「開啟 PDF」按鈕選取檔案。';
+            }
+            alert(msg);
+            loadingBar.style.display = 'none';
+          });
+      }
+
+      function updateUI() {
+        pageNumberInput.value = pageNum;
+        previousButton.disabled = pageNum <= 1;
+        nextButton.disabled = pageNum >= pdfDoc.numPages;
+      }
+
+      function updateZoomValue() {
+        zoomValueSpan.textContent = Math.round(scale * 100) + '%';
+      }
+
+      // 按鈕事件處理
+      function onPrevPage() {
+        if (pageNum > 1) {
+          pageNum--;
+          pdfViewer.currentPageNumber = pageNum;
+        }
+      }
+
+      function onNextPage() {
+        if (pageNum < pdfDoc.numPages) {
+          pageNum++;
+          pdfViewer.currentPageNumber = pageNum;
+        }
+      }
+
+      function onZoomIn() {
+        scale = Math.min(5, scale * 1.1);
+        pdfViewer.currentScale = scale;
+      }
+
+      function onZoomOut() {
+        scale = Math.max(0.1, scale / 1.1);
+        pdfViewer.currentScale = scale;
+      }
+
+      function onPrint() {
+        alert('本系統已禁用列印功能。');
+      }
+
+      function onDownload() {
+        alert('本系統已禁用下載功能。');
+      }
+
+      // 監聽檔案選取
+      fileInput.addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (file) {
+          const fileReader = new FileReader();
+          fileReader.onload = function () {
+            const typedarray = new Uint8Array(this.result);
+            loadPdf(typedarray);
+          };
+          fileReader.readAsArrayBuffer(file);
+        }
+      });
+
+      // 綁定按鈕事件
+      previousButton.addEventListener('click', onPrevPage);
+      nextButton.addEventListener('click', onNextPage);
+      zoomInButton.addEventListener('click', onZoomIn);
+      zoomOutButton.addEventListener('click', onZoomOut);
+      printButton.addEventListener('click', onPrint);
+      downloadButton.addEventListener('click', onDownload);
+
+      pageNumberInput.addEventListener('change', function () {
+        const val = parseInt(this.value);
+        if (val >= 1 && val <= pdfDoc.numPages) {
+          pageNum = val;
+          pdfViewer.currentPageNumber = pageNum;
+        } else {
+          this.value = pageNum;
+        }
+      });
+
+      // 禁用右鍵選單
+      document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+      // 禁用鍵盤快捷鍵 (Ctrl+P, Ctrl+S)
+      document.addEventListener('keydown', function (e) {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+          e.preventDefault();
+          alert('本系統已禁用列印功能。');
+        }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+          e.preventDefault();
+          alert('本系統已禁用儲存功能。');
+        }
+      });
+
+      // 視窗失去焦點時模糊化內容 (防截圖軟體)
+      window.addEventListener('blur', function () {
+        document.body.classList.add('blurred');
+        document.title = '內容保護中...';
+      });
+
+      window.addEventListener('focus', function () {
+        document.body.classList.remove('blurred');
+        document.title = '本地預覽PDF版';
+      });
+
+      // 初始化
+      initApp();
+      createPdfViewer();
+
+      // 嘗試自動載入同目錄下的 report.pdf
+      //loadPdf('report.pdf');
+    </script>
+  </body>
+</html>
