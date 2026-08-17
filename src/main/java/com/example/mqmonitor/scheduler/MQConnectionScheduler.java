@@ -1,19 +1,19 @@
 package com.example.mqmonitor.scheduler;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.example.mqmonitor.service.MQConnectionService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class MQConnectionScheduler {
 
-    @Autowired
-    private MQConnectionService mqConnectionService;
+    private final MQConnectionService mqConnectionService;
 
     /**
      * 定期檢查 MQ 連線狀態，如果斷開則嘗試重新連線

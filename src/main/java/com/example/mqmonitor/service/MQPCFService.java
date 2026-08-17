@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.apache.commons.lang3.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.ibm.mq.MQException;
@@ -20,14 +19,15 @@ import com.ibm.mq.headers.pcf.PCFException;
 import com.ibm.mq.headers.pcf.PCFMessage;
 import com.ibm.mq.headers.pcf.PCFMessageAgent;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class MQPCFService {
 
-    @Autowired
-    private MQConnectionService mqConnectionService;
+    private final MQConnectionService mqConnectionService;
 
     /**
      * 獲取 Queue Manager 狀態
