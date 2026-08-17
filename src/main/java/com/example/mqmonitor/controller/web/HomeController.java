@@ -1,6 +1,5 @@
 package com.example.mqmonitor.controller.web;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,15 +7,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.example.mqmonitor.service.MQPCFService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Controller
 @RequestMapping("/")
+@RequiredArgsConstructor
 public class HomeController {
 
-    @Autowired
-    private MQPCFService mqpcfService;
+    private final MQPCFService mqpcfService;
 
     @GetMapping({ "", "index" })
     public String index(Model model) {

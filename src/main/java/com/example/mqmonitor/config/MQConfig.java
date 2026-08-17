@@ -1,6 +1,5 @@
 package com.example.mqmonitor.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -8,15 +7,16 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import com.example.mqmonitor.service.MQConnectionService;
 import com.ibm.mq.MQQueueManager;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Configuration
 @EnableScheduling
+@RequiredArgsConstructor
 public class MQConfig {
 
-    @Autowired
-    private MQConnectionService mqConnectionService;
+    private final MQConnectionService mqConnectionService;
 
     @Bean
     public MQQueueManager mqQueueManager() {

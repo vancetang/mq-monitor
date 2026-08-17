@@ -1,6 +1,5 @@
 package com.example.mqmonitor.controller.web;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -12,15 +11,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.example.mqmonitor.service.PdfReportService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Controller
 @RequestMapping("/report")
+@RequiredArgsConstructor
 public class ReportController {
 
-    @Autowired
-    private PdfReportService pdfReportService;
+    private final PdfReportService pdfReportService;
 
     /**
      * 顯示 PDF 預覽頁面

@@ -4,7 +4,6 @@ import java.util.Hashtable;
 import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.mqmonitor.config.MQInfo;
@@ -12,14 +11,15 @@ import com.ibm.mq.MQException;
 import com.ibm.mq.MQQueueManager;
 import com.ibm.mq.constants.MQConstants;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class MQConnectionService {
 
-    @Autowired
-    private MQInfo mqInfo;
+    private final MQInfo mqInfo;
 
     private MQQueueManager mqQueueManager;
     private boolean isConnecting = false;
