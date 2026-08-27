@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,18 +13,18 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.mqmonitor.service.MQConnectionService;
 import com.example.mqmonitor.service.MQPCFService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/mq")
 public class MqApiController {
 
-    @Autowired
-    private MQPCFService mqpcfService;
+    private final MQPCFService mqpcfService;
 
-    @Autowired
-    private MQConnectionService mqConnectionService;
+    private final MQConnectionService mqConnectionService;
 
     @GetMapping("/queuemanager")
     public ResponseEntity<Map<String, Object>> getQueueManagerStatus() {

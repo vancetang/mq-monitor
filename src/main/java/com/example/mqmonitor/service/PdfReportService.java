@@ -7,7 +7,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.itextpdf.io.font.PdfEncodings;
@@ -25,14 +24,15 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class PdfReportService {
 
-    @Autowired
-    private MQPCFService mqpcfService;
+    private final MQPCFService mqpcfService;
 
     // 字型定義
     private PdfFont kaiFont;
