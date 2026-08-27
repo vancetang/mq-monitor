@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>本地預覽PDF版 v6</title>
+
+    <!-- PDF.js 官方 CSS (本地資產) -->
+    <link rel="stylesheet" href="pdfjs-assets-v6.2.108/pdf_viewer.css" />
+
+    <!-- 自定義樣式 -->
+    <style>
+      :root {
+        --main-color: #0078d7;
+        --button-hover-color: #005a9e;
+        --button-active-color: #004275;
+      }
+
+      html,
+      body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+      }
+
+      #viewerContainer {
+        position: absolute;
+        top: 40px; /* 增加高度給工具列 */
+        bottom: 0;
+        left: 0;
+        right: 0;
+        overflow: auto;
+        background-color: #525659;
+      }
+
+      #viewer {
+        position: relative;
+      }
+
+      .toolbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        background-color: #474747;
+        color: white;
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+        z-index: 1000;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      }
+
+      .toolbar-left,
+      .toolbar-center,
+      .toolbar-right {
+        display: flex;
+        align-items: center;
+      }
+
+      .toolbar-left {
+        flex: 1.5; /* 增加空間給檔案上傳按鈕 */
+      }
+
+      .toolbar-center {
+        flex: 1;
+        justify-content: center;
+      }
+
+      .toolbar-right {
+        flex: 1;
+        justify-content: flex-end;
+      }
+
+      .toolbar button,
+      .toolbar label.btn {
+        background-color: transparent;
+        border: none;
+        color: white;
+        padding: 6px 10px;
+        margin: 0 2px;
+        cursor: pointer;
+        border-radius: 2px;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .toolbar label.btn {
+        background-color: var(--main-color);
+        margin-right: 15px;
+      }
+
+      .toolbar button:hover,
+      .toolbar label.btn:hover {
+        background-color: var(--button-hover-color);
+      }
+
+      .toolbar button:active,
+      .toolbar label.btn:active {
+        background-color: var(--button-active-color);
+      }
+
+      /* 隱藏原生檔案輸入框 */
+      #fileInput {
+        display: none;
+      }
+
+      .page-controls {
+        display: flex;
+        align-items: center;
+      }
+
+      #pageNumber {
+        width: 40px;
+        text-align: center;
+        background-color: #333;
+        color: white;
+        border: 1px solid #555;
+        border-radius: 2px;
+        padding: 3px;
+        margin: 0 5px;
+      }
+
+      .zoom-controls {
+        display: flex;
+        align-items: center;
+        margin: 0 10px;
+      }
+
+      #zoomValue {
+        margin: 0 5px;
+        min-width: 45px;
+        text-align: center;
+      }
+
+      #loadingBar {
+        position: absolute;
+        top: 40px;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background-color: rgba(0, 0, 0, 0.3);
+        z-index: 1001;
+        display: none;
+      }
+
+      #loadingBar .progress {
+        width: 0%;
+        height: 100%;
+        background-color: var(--main-color);
+        transition: width 0.2s;
+      }
+
+      #viewerContainer {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+
+      @media print {
+        /* 隱藏所有頁面內容 */
+        .toolbar,
+        #viewerContainer,
+        #loadingBar {
+          display: none !important;
+        }
+
+        /* 顯示列印遮蔽層 */
+        #print-overlay {
+          display: flex !important;
+        }
+
+        /* 修正：列印時強制移除模糊濾鏡，避免遮蔽層也被模糊 */
+        body.blurred {
+          filter: none !important;
+          -webkit-filter: none !important;
+        }
+      }
+
+      /* 列印遮蔽層樣式 */
+      #print-overlay {
+        display: none; /* 平時隱藏 */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: white;
+        z-index: 9999;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .print-warning .icon {
+        font-size: 80px;
+        margin-bottom: 20px;
+      }
+
+      .print-warning h1 {
+        color: #d32f2f; /* 紅色警告 */
+        font-size: 32px;
+        margin: 0;
+        font-weight: bold;
+      }
+
+      .print-warning p {
+        color: #555;
+        font-size: 18px;
+        margin-top: 10px;
+      }
+
+      /* 視窗失去焦點時的模糊效果 */
+      .blurred {
+        /* 使用高斯模糊 + 降低亮度 (模擬深色毛玻璃效果，避免刺眼) */
+        filter: blur(20px) brightness(0.6);
+        -webkit-filter: blur(20px) brightness(0.6);
+        pointer-events: none; /* 防止在模糊狀態下被點擊 */
+        transition: filter 0.3s ease; /* 增加過渡時間讓效果更柔和 */
+      }
+
+      /* 密碼輸入對話框樣式 */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-content {
+        background-color: #3a3a3a;
+        color: white;
+        padding: 20px 30px;
+        border-radius: 4px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        min-width: 300px;
+        text-align: center;
+      }
+
+      .modal-content h3 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 18px;
+      }
+
+      .modal-content p {
+        margin-bottom: 15px;
+        font-size: 14px;
+        color: #ddd;
+      }
+
+      .password-input-container {
+        position: relative;
+        width: 100%;
+        margin-bottom: 20px;
+      }
+
+      .modal-content input#modalPasswordInput {
+        width: 100%;
+        padding: 8px;
+        padding-right: 35px; /* 為眼睛圖示留空間 */
+        border: 1px solid #555;
+        border-radius: 2px;
+        background-color: #222;
+        color: white;
+        box-sizing: border-box;
+      }
+
+      .modal-content input#modalPasswordInput:focus {
+        outline: none;
+        border-color: var(--main-color);
+      }
+
+      .modal-content input#modalPasswordInput.error {
+        border-color: #f44336;
+      }
+
+      .error-text {
+        color: #ff5252 !important;
+        font-weight: bold;
+      }
+
+      .toggle-password {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        user-select: none;
+        font-size: 18px;
+        opacity: 0.8;
+        transition: all 0.2s ease;
+      }
+
+      .toggle-password:hover {
+        opacity: 1;
+        transform: translateY(-50%) scale(1.2);
+      }
+
+      .toggle-password:active {
+        transform: translateY(-50%) scale(0.9);
+      }
+
+      .modal-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .modal-buttons button {
+        padding: 6px 15px;
+        border: none;
+        border-radius: 2px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .btn-cancel {
+        background-color: #555;
+        color: white;
+      }
+
+      .btn-cancel:hover {
+        background-color: #666;
+      }
+
+      .btn-confirm {
+        background-color: var(--main-color);
+        color: white;
+      }
+
+      .btn-confirm:hover {
+        background-color: var(--button-hover-color);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <!-- 新增：檔案選取按鈕 -->
+        <label for="fileInput" class="btn" title="開啟本地 PDF 檔案">
+          <span>📂 開啟 PDF</span>
+        </label>
+        <input type="file" id="fileInput" accept=".pdf" />
+
+        <div class="page-controls">
+          <button id="previous" title="上一頁">◀</button>
+          <input type="number" id="pageNumber" min="1" value="1" />
+          <span>/</span>
+          <span id="numPages">0</span>
+          <button id="next" title="下一頁">▶</button>
+        </div>
+      </div>
+
+      <div class="toolbar-center">
+        <div class="zoom-controls">
+          <button id="zoomOut" title="縮小">－</button>
+          <span id="zoomValue">100%</span>
+          <button id="zoomIn" title="放大">＋</button>
+        </div>
+      </div>
+
+      <div class="toolbar-right">
+        <button id="print" title="列印">列印</button>
+        <button id="download" title="下載">下載</button>
+      </div>
+    </div>
+
+    <div id="loadingBar">
+      <div class="progress"></div>
+    </div>
+
+    <div id="viewerContainer">
+      <div id="viewer" class="pdfViewer"></div>
+    </div>
+
+    <!-- 列印遮蔽層 (預設隱藏，僅列印時顯示) -->
+    <div id="print-overlay">
+      <div class="print-warning">
+        <div class="icon">🚫</div>
+        <h1>機密文件 禁止列印</h1>
+        <p>Confidential - Printing Prohibited</p>
+      </div>
+    </div>
+
+    <!-- 密碼輸入對話框 -->
+    <div id="passwordModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>文件受保護</h3>
+        <p id="passwordPromptMsg">請輸入密碼以開啟此文件：</p>
+        <div class="password-input-container">
+          <input
+            type="password"
+            id="modalPasswordInput"
+            placeholder="請輸入密碼"
+          />
+          <span id="togglePassword" class="toggle-password" title="顯示密碼"
+            >👀</span
+          >
+        </div>
+        <div class="modal-buttons">
+          <button id="modalCancelBtn" class="btn-cancel">取消</button>
+          <button id="modalConfirmBtn" class="btn-confirm">確認</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PDF.js 官方 JS (使用 CDN 與 ESM) -->
+    <script type="module">
+      import {
+        getDocument,
+        GlobalWorkerOptions,
+        PasswordResponses,
+      } from './pdfjs-assets-v6.2.108/pdf.mjs';
+      import {
+        PDFViewer,
+        EventBus,
+        PDFLinkService,
+        PDFFindController,
+      } from './pdfjs-assets-v6.2.108/pdf_viewer.mjs';
+
+      // 設定 PDF.js 的 worker 路徑
+      GlobalWorkerOptions.workerSrc = './pdfjs-assets-v6.2.108/pdf.worker.mjs';
+
+      class PDFViewerApp {
+        constructor() {
+          this.pdfDoc = null;
+          this.pageNum = 1;
+          this.scale = 1.0;
+          this.pdfViewer = null;
+          this.pdfLinkService = null;
+          this.eventBus = null;
+          this.currentPasswordCallback = null;
+          this.loadingTask = null;
+
+          // DOM 元素快取
+          this.ui = {
+            container: document.getElementById('viewerContainer'),
+            pageNumberInput: document.getElementById('pageNumber'),
+            numPages: document.getElementById('numPages'),
+            previousButton: document.getElementById('previous'),
+            nextButton: document.getElementById('next'),
+            zoomInButton: document.getElementById('zoomIn'),
+            zoomOutButton: document.getElementById('zoomOut'),
+            zoomValueSpan: document.getElementById('zoomValue'),
+            printButton: document.getElementById('print'),
+            downloadButton: document.getElementById('download'),
+            loadingBar: document.getElementById('loadingBar'),
+            loadingBarProgress: document.querySelector('#loadingBar .progress'),
+            fileInput: document.getElementById('fileInput'),
+            passwordModal: document.getElementById('passwordModal'),
+            modalPasswordInput: document.getElementById('modalPasswordInput'),
+            modalConfirmBtn: document.getElementById('modalConfirmBtn'),
+            modalCancelBtn: document.getElementById('modalCancelBtn'),
+            passwordPromptMsg: document.getElementById('passwordPromptMsg'),
+            togglePassword: document.getElementById('togglePassword'),
+          };
+
+          this.init();
+        }
+
+        init() {
+          this.initEventBus();
+          this.createPdfViewer();
+          this.bindEvents();
+          this.setupSecurity();
+        }
+
+        initEventBus() {
+          this.eventBus = new EventBus();
+
+          // 監聽頁面變更
+          this.eventBus.on('pagechanging', (evt) => {
+            this.pageNum = evt.pageNumber;
+            this.updateUI();
+          });
+
+          // 監聽縮放變更
+          this.eventBus.on('scalechanging', (evt) => {
+            this.scale = evt.scale;
+            this.updateZoomValue();
+          });
+
+          // 監聽載入進度
+          this.eventBus.on('progress', (evt) => {
+            if (evt.total > 0) {
+              const percent = Math.round((evt.loaded / evt.total) * 100);
+              this.ui.loadingBarProgress.style.width = percent + '%';
+            }
+          });
+
+          // 監聽文件載入完成
+          this.eventBus.on('documentloaded', () => {
+            this.ui.loadingBar.style.display = 'none';
+          });
+
+          // 頁面初始化完成後，自動調整縮放
+          this.eventBus.on('pagesinit', () => {
+            this.pdfViewer.currentScaleValue = 'auto';
+          });
+        }
+
+        createPdfViewer() {
+          this.ui.container.textContent = '';
+          const viewerDiv = document.createElement('div');
+          viewerDiv.id = 'viewer';
+          viewerDiv.className = 'pdfViewer';
+          this.ui.container.appendChild(viewerDiv);
+
+          this.pdfLinkService = new PDFLinkService({
+            eventBus: this.eventBus,
+          });
+
+          const findController = new PDFFindController({
+            eventBus: this.eventBus,
+            linkService: this.pdfLinkService,
+          });
+
+          this.pdfViewer = new PDFViewer({
+            container: this.ui.container,
+            eventBus: this.eventBus,
+            linkService: this.pdfLinkService,
+            findController: findController,
+            renderer: 'canvas',
+            textLayerMode: 2,
+          });
+
+          this.pdfLinkService.setViewer(this.pdfViewer);
+        }
+
+        async loadPdf(source) {
+          this.ui.loadingBar.style.display = 'block';
+          this.ui.loadingBarProgress.style.width = '0%';
+
+          if (this.loadingTask) {
+            await this.loadingTask.destroy();
+            this.loadingTask = null;
+            this.pdfDoc = null;
+          }
+
+          const params =
+            typeof source === 'string' ? { url: source } : { data: source };
+
+          // 建立 Loading Task
+          const loadingTask = getDocument(params);
+          this.loadingTask = loadingTask;
+
+          // 設定密碼回調
+          loadingTask.onPassword = (updatePassword, reason) => {
+            this.handlePasswordRequest(updatePassword, reason);
+          };
+
+          try {
+            const pdf = await loadingTask.promise;
+
+            // 重建 Viewer (確保狀態乾淨)
+            this.createPdfViewer();
+
+            this.pdfDoc = pdf;
+            this.ui.numPages.textContent = pdf.numPages;
+            this.pdfViewer.setDocument(pdf);
+            this.pdfLinkService.setDocument(pdf);
+
+            // 重置狀態
+            this.pageNum = 1;
+            this.scale = 1.0;
+
+            this.updateUI();
+            this.hidePasswordModal();
+            console.log('PDF 載入成功');
+          } catch (error) {
+            console.error('載入 PDF 失敗:', error);
+            if (this.loadingTask === loadingTask) {
+              this.loadingTask = null;
+            }
+            this.hidePasswordModal();
+
+            let msg = '載入失敗: ' + error.message;
+            if (
+              typeof source === 'string' &&
+              window.location.protocol === 'file:'
+            ) {
+              msg +=
+                '\n\n錯誤：請使用 HTTP Server 執行此 v5 版本 (ESM)，或改用支援 file:// 的 v3 版本。';
+            }
+            alert(msg);
+            this.ui.loadingBar.style.display = 'none';
+          }
+        }
+
+        handlePasswordRequest(updatePassword, reason) {
+          console.log('需要密碼，原因代碼:', reason);
+          this.currentPasswordCallback = updatePassword;
+
+          let msg = '請輸入密碼以開啟此文件：';
+          const PASSWORD_INCORRECT = PasswordResponses?.INCORRECT_PASSWORD || 1;
+
+          if (reason === PASSWORD_INCORRECT) {
+            msg = '密碼錯誤，請重新輸入：';
+            this.ui.modalPasswordInput.value = '';
+            this.ui.modalPasswordInput.classList.add('error');
+            this.ui.passwordPromptMsg.classList.add('error-text');
+          } else {
+            this.ui.modalPasswordInput.value = '';
+            this.ui.modalPasswordInput.classList.remove('error');
+            this.ui.passwordPromptMsg.classList.remove('error-text');
+          }
+
+          this.ui.passwordPromptMsg.textContent = msg;
+          this.ui.passwordModal.style.display = 'flex';
+          this.ui.modalPasswordInput.focus();
+        }
+
+        submitPassword() {
+          const password = this.ui.modalPasswordInput.value;
+          if (this.currentPasswordCallback) {
+            this.ui.passwordModal.style.display = 'none';
+            this.currentPasswordCallback(password);
+          }
+        }
+
+        cancelPassword() {
+          if (this.currentPasswordCallback) {
+            console.log('使用者取消輸入密碼');
+            this.currentPasswordCallback('');
+          }
+          this.hidePasswordModal();
+          this.ui.loadingBar.style.display = 'none';
+        }
+
+        hidePasswordModal() {
+          this.ui.passwordModal.style.display = 'none';
+          this.currentPasswordCallback = null;
+        }
+
+        updateUI() {
+          this.ui.pageNumberInput.value = this.pageNum;
+          this.ui.previousButton.disabled = this.pageNum <= 1;
+          this.ui.nextButton.disabled =
+            !this.pdfDoc || this.pageNum >= this.pdfDoc.numPages;
+        }
+
+        updateZoomValue() {
+          this.ui.zoomValueSpan.textContent =
+            Math.round(this.scale * 100) + '%';
+        }
+
+        bindEvents() {
+          // 翻頁控制
+          this.ui.previousButton.addEventListener('click', () => {
+            if (this.pageNum > 1) {
+              this.pageNum--;
+              this.pdfViewer.currentPageNumber = this.pageNum;
+            }
+          });
+
+          this.ui.nextButton.addEventListener('click', () => {
+            if (this.pdfDoc && this.pageNum < this.pdfDoc.numPages) {
+              this.pageNum++;
+              this.pdfViewer.currentPageNumber = this.pageNum;
+            }
+          });
+
+          this.ui.pageNumberInput.addEventListener('change', (e) => {
+            const val = parseInt(e.target.value);
+            if (this.pdfDoc && val >= 1 && val <= this.pdfDoc.numPages) {
+              this.pageNum = val;
+              this.pdfViewer.currentPageNumber = this.pageNum;
+            } else {
+              e.target.value = this.pageNum;
+            }
+          });
+
+          // 縮放控制
+          this.ui.zoomInButton.addEventListener('click', () => {
+            this.scale = Math.min(5, this.scale * 1.1);
+            this.pdfViewer.currentScale = this.scale;
+          });
+
+          this.ui.zoomOutButton.addEventListener('click', () => {
+            this.scale = Math.max(0.1, this.scale / 1.1);
+            this.pdfViewer.currentScale = this.scale;
+          });
+
+          // 檔案上傳
+          this.ui.fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+              const fileReader = new FileReader();
+              fileReader.onload = () => {
+                this.loadPdf(new Uint8Array(fileReader.result));
+              };
+              fileReader.readAsArrayBuffer(file);
+            }
+          });
+
+          // 列印與下載 (禁用)
+          const alertDisabled = (msg) => alert(msg);
+          this.ui.printButton.addEventListener('click', () =>
+            alertDisabled('本系統已禁用列印功能。'),
+          );
+          this.ui.downloadButton.addEventListener('click', () =>
+            alertDisabled('本系統已禁用下載功能。'),
+          );
+
+          // 密碼 Modal 事件
+          this.ui.modalConfirmBtn.addEventListener('click', () =>
+            this.submitPassword(),
+          );
+          this.ui.modalCancelBtn.addEventListener('click', () =>
+            this.cancelPassword(),
+          );
+          this.ui.modalPasswordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') this.submitPassword();
+            else if (e.key === 'Escape') this.cancelPassword();
+          });
+
+          // 密碼顯示切換
+          const showPass = () => (this.ui.modalPasswordInput.type = 'text');
+          const hidePass = () => (this.ui.modalPasswordInput.type = 'password');
+
+          this.ui.togglePassword.addEventListener('mousedown', showPass);
+          this.ui.togglePassword.addEventListener('mouseup', hidePass);
+          this.ui.togglePassword.addEventListener('mouseleave', hidePass);
+
+          this.ui.togglePassword.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            showPass();
+          });
+          this.ui.togglePassword.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            hidePass();
+          });
+        }
+
+        setupSecurity() {
+          // 禁用右鍵
+          document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+          // 禁用快捷鍵
+          document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+              e.preventDefault();
+              alert('本系統已禁用列印功能。');
+            }
+            if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+              e.preventDefault();
+              alert('本系統已禁用儲存功能。');
+            }
+          });
+
+          // 模糊效果
+          window.addEventListener('blur', () => {
+            document.body.classList.add('blurred');
+            document.title = '內容保護中...';
+          });
+
+          window.addEventListener('focus', () => {
+            document.body.classList.remove('blurred');
+            document.title = '本地預覽PDF版 v6';
+          });
+        }
+      }
+
+      // 啟動應用程式
+      const app = new PDFViewerApp();
+
+      // 開放給全域以便除錯 (可選)
+      window.pdfApp = app;
+    </script>
+  </body>
+</html>
