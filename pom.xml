@@ -19,7 +19,7 @@
         <springdoc.openapi.version>2.10.0</springdoc.openapi.version>
         <commons.lang3.version>3.22.0</commons.lang3.version>
         <ibm.mq.version>9.4.5.1</ibm.mq.version>
-        <itext.version>7.2.6</itext.version>
+        <itext.version>7.2.7</itext.version>
     </properties>
     <dependencies>
         <!-- ================ Spring 主要 ================ -->
